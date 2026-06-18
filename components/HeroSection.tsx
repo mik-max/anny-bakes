@@ -1,7 +1,7 @@
 "use client";
 import { IMAGES } from "@/constants/images";
 import Image from "next/image";
-import Link from "next/link";
+import ScrollLink from "@/components/ScrollLink";
 
 export default function HeroSection() {
   return (
@@ -43,12 +43,12 @@ export default function HeroSection() {
           </span>
 
           {/* Right: Order Now */}
-          <Link
-            href="#catalogue"
+          <ScrollLink
+            targetId="catalogue"
             className="flex items-center gap-1.5 text-sm text-white/90 hover:text-white transition-colors"
           >
             Order Now <span aria-hidden>→</span>
-          </Link>
+          </ScrollLink>
         </nav>
 
         {/* ── Spacer ── */}
@@ -76,12 +76,12 @@ export default function HeroSection() {
               Delight in artisan breads, pastries, and cakes baked fresh every
               day using the finest ingredients.
             </p>
-            <Link
-              href="#catalogue"
+            <ScrollLink
+              targetId="catalogue"
               className="inline-flex items-center gap-2 bg-[#F5EFE6] px-6 py-3 text-sm font-sans font-medium text-stone-900 transition-colors hover:bg-white"
             >
               View Our Menu <span aria-hidden>→</span>
-            </Link>
+            </ScrollLink>
           </div>
         </div>
       </div>

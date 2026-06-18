@@ -1,11 +1,15 @@
 import HeroSection from "@/components/HeroSection";
+import FeaturedSection from "@/components/FeaturedSection";
+import CatalogueSection from "@/components/CatalogueSection";
 
 export default function Home() {
   return (
     <main>
       <HeroSection />
-      {/* Catalogue section goes here next */}
-      <div id="catalogue" />
+      <div id="catalogue">
+        <FeaturedSection />
+      </div>
+      <CatalogueSection />
     </main>
   );
 }
