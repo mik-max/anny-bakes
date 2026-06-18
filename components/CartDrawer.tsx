@@ -54,8 +54,8 @@ export default function CartDrawer() {
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-stone-100 px-6 py-5">
-          <h2 className="font-serif text-2xl text-stone-900">Your Cart</h2>
+        <div className="flex items-center justify-between border-b border-stone-100 px-4 py-4 sm:px-6 sm:py-5">
+          <h2 className="font-serif text-xl text-stone-900 sm:text-2xl">Your Cart</h2>
           <button
             onClick={() => setOpen(false)}
             aria-label="Close cart"
@@ -75,7 +75,7 @@ export default function CartDrawer() {
             </p>
           </div>
         ) : (
-          <ul className="flex-1 divide-y divide-stone-100 overflow-y-auto px-6">
+          <ul className="flex-1 divide-y divide-stone-100 overflow-y-auto px-4 sm:px-6">
             {items.map((item) => (
               <CartLineItem
                 key={item.product.id}
@@ -89,7 +89,7 @@ export default function CartDrawer() {
 
         {/* Footer */}
         {items.length > 0 && (
-          <div className="space-y-4 border-t border-stone-100 px-6 py-5">
+          <div className="space-y-4 border-t border-stone-100 px-4 py-4 sm:px-6 sm:py-5">
             <div className="flex items-center justify-between">
               <span className="font-sans text-sm text-stone-500">Subtotal</span>
               <span className="font-sans text-base font-semibold text-stone-900">

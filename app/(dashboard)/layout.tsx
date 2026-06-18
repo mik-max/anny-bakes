@@ -53,7 +53,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* ── Main content ── */}
       <main className="flex-1 md:ml-56">
-        <div className="mt-12 md:mt-0 px-6 py-8">
+        <div className="mt-12 md:mt-0 px-4 py-5 sm:px-6 sm:py-8">
           {children}
         </div>
       </main>

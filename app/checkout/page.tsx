@@ -7,11 +7,11 @@ export const metadata: Metadata = {
 
 export default function CheckoutPage() {
   return (
-    <main className="min-h-screen bg-[#FAF6F0] px-6 py-16">
+    <main className="min-h-screen bg-[#FAF6F0] px-4 py-10 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-5xl">
 
         {/* Page header */}
-        <div className="mb-10">
+        <div className="mb-8 sm:mb-10">
           <p className="mb-2 font-sans text-xs font-semibold uppercase tracking-[0.2em] text-stone-400">
             Almost there
           </p>

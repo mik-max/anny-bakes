@@ -56,28 +56,34 @@ export default function HeroSection() {
       <div className="absolute inset-0 bg-black/40" />
       <div className="absolute inset-0 bg-linear-to-t from-black/95 via-black/20 to-transparent" />
 
-      <div className="relative z-10 flex h-full flex-col px-8 py-7 md:px-12 md:py-9">
+      <div className="relative z-10 flex h-full flex-col px-5 py-5 md:px-12 md:py-9">
 
         {/* Nav */}
         <nav className="hero-nav flex items-center justify-between">
+          {/* Left: hamburger */}
           <button
             aria-label="Open menu"
             className="flex items-center gap-2.5 text-white/90 transition-colors hover:text-white"
           >
             <HamburgerIcon />
-            <span className="font-sans text-sm uppercase tracking-widest">Menu</span>
+            <span className="hidden font-sans text-sm uppercase tracking-widest sm:inline">Menu</span>
           </button>
 
-          <span className="select-none font-serif text-[1.75rem] font-normal tracking-wide text-white">
+          {/* Centre: brand */}
+          <span className="select-none font-serif text-2xl font-normal tracking-wide text-white md:text-[1.75rem]">
             Anny Bakes
           </span>
 
+          {/* Right: Order Now — hidden on mobile, replaced by the hero CTA below */}
           <ScrollLink
             targetId="catalogue"
-            className="flex items-center gap-1.5 text-sm text-white/90 transition-colors hover:text-white"
+            className="hidden items-center gap-1.5 text-sm text-white/90 transition-colors hover:text-white sm:flex"
           >
             Order Now <span aria-hidden>→</span>
           </ScrollLink>
+
+          {/* Invisible spacer keeps brand centred on mobile */}
+          <div className="w-6 sm:hidden" aria-hidden />
         </nav>
 
         <div className="flex-1" />
@@ -90,7 +96,7 @@ export default function HeroSection() {
             <p className="hero-eyebrow mb-3 font-sans text-xs font-semibold uppercase tracking-[0.22em] text-white/70">
               Small Batch. Real Ingredients.
             </p>
-            <h1 className="hero-headline font-serif text-[clamp(3rem,7vw,5.5rem)] font-semibold leading-[1.05] text-[#F5EFE6]">
+            <h1 className="hero-headline font-serif text-[clamp(2.25rem,7vw,5.5rem)] font-semibold leading-[1.05] text-[#F5EFE6]">
               Baked Fresh.
               <br />
               Every{" "}

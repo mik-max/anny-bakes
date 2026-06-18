@@ -44,9 +44,9 @@ export default function Footer() {
 
       {/* Bottom strip */}
       <div className="border-t border-stone-800/60">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 sm:px-10 lg:px-16">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-y-1 px-6 py-4 sm:px-10 lg:px-16">
           <p className="font-sans text-xs text-stone-600">
-            © {year} Anny Bakes Cakes and Treats. All rights reserved.
+            © {year} Anny Bakes Cakes and Treats.
           </p>
           <Link
             href="/sign-in"

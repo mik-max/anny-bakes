@@ -197,7 +197,7 @@ export default function CheckoutForm() {
       </div>
 
       {/* ── Right: order summary ── */}
-      <aside className="h-fit rounded-2xl bg-white p-6 shadow-sm lg:sticky lg:top-8">
+      <aside className="h-fit rounded-2xl bg-white p-4 shadow-sm sm:p-6 lg:sticky lg:top-8">
         <h2 className="mb-5 font-serif text-xl text-stone-900">Order Summary</h2>
 
         <ul className="mb-5 space-y-3">
@@ -275,7 +275,7 @@ function FormSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="space-y-4 rounded-2xl bg-white p-6 shadow-sm">
+    <div className="space-y-4 rounded-2xl bg-white p-4 shadow-sm sm:p-6">
       <h2 className="font-serif text-xl text-stone-900">{title}</h2>
       {children}
     </div>

@@ -18,7 +18,7 @@ function formatCents(cents: number) {
 
 interface ModalState {
   open: boolean;
-  product: Product | null; // null = adding new
+  product: Product | null;
 }
 
 export default function ProductsManager({ products }: { products: Product[] }) {
@@ -68,7 +68,7 @@ export default function ProductsManager({ products }: { products: Product[] }) {
   return (
     <>
       {/* Page header */}
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-5 flex items-center justify-between">
         <div>
           <h1 className="font-sans text-2xl font-semibold text-stone-900">Products</h1>
           <p className="mt-0.5 font-sans text-sm text-stone-500">
@@ -79,7 +79,7 @@ export default function ProductsManager({ products }: { products: Product[] }) {
           onClick={openAdd}
           className="rounded-lg bg-stone-900 px-4 py-2 font-sans text-sm font-semibold text-white transition-colors hover:bg-stone-700"
         >
-          + Add Product
+          + Add
         </button>
       </div>
 
@@ -89,8 +89,88 @@ export default function ProductsManager({ products }: { products: Product[] }) {
         </p>
       )}
 
-      {/* Products table */}
-      <div className="overflow-hidden rounded-xl border border-stone-100 bg-white">
+      {/* ── Mobile: card list ── */}
+      <div className="space-y-3 sm:hidden">
+        {products.map((product) => (
+          <div key={product.id} className="rounded-xl border border-stone-100 bg-white p-4">
+            {/* Product info row */}
+            <div className="flex items-center gap-3">
+              <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-stone-100">
+                {product.image_url ? (
+                  <Image
+                    src={product.image_url}
+                    alt={product.name}
+                    fill
+                    className="object-cover"
+                    sizes="56px"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-stone-300">
+                    <ImagePlaceholderIcon />
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-sans text-sm font-semibold text-stone-900">
+                  {product.name}
+                </p>
+                <div className="mt-1 flex items-center gap-2">
+                  <span className="font-sans text-sm text-stone-600">
+                    {formatCents(product.price)}
+                  </span>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-0.5 font-sans text-[11px] font-semibold ${
+                      product.in_stock
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-red-50 text-red-600"
+                    }`}
+                  >
+                    {product.in_stock ? "In Stock" : "Out of Stock"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions row */}
+            <div className="mt-3 flex items-center justify-end gap-4 border-t border-stone-50 pt-3">
+              <button
+                onClick={() => openEdit(product)}
+                className="font-sans text-xs font-semibold text-stone-500 transition-colors hover:text-stone-900"
+              >
+                Edit
+              </button>
+
+              {deleteConfirmId === product.id ? (
+                <span className="flex items-center gap-2">
+                  <span className="font-sans text-xs text-stone-400">Delete?</span>
+                  <button
+                    onClick={() => handleDelete(product.id)}
+                    className="font-sans text-xs font-semibold text-red-600 transition-colors hover:text-red-800"
+                  >
+                    Yes
+                  </button>
+                  <button
+                    onClick={() => setDeleteConfirmId(null)}
+                    className="font-sans text-xs font-semibold text-stone-400 transition-colors hover:text-stone-700"
+                  >
+                    No
+                  </button>
+                </span>
+              ) : (
+                <button
+                  onClick={() => setDeleteConfirmId(product.id)}
+                  className="font-sans text-xs font-semibold text-stone-400 transition-colors hover:text-red-600"
+                >
+                  Delete
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Desktop: table ── */}
+      <div className="hidden overflow-hidden rounded-xl border border-stone-100 bg-white sm:block">
         <table className="w-full">
           <thead>
             <tr className="border-b border-stone-100">
@@ -240,17 +320,13 @@ function ProductModal({
   return (
     <>
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-40 bg-black/40"
-        onClick={onClose}
-        aria-hidden
-      />
+      <div className="fixed inset-0 z-40 bg-black/40" onClick={onClose} aria-hidden />
 
-      {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-md rounded-2xl bg-white shadow-xl">
+      {/* Modal — max-h + overflow-y so it scrolls on short screens */}
+      <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4">
+        <div className="w-full max-h-[92vh] overflow-y-auto rounded-t-2xl bg-white shadow-xl sm:max-w-md sm:rounded-2xl">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-stone-100 px-6 py-4">
+          <div className="sticky top-0 z-10 flex items-center justify-between border-b border-stone-100 bg-white px-5 py-4">
             <h2 className="font-sans text-base font-semibold text-stone-900">
               {product ? "Edit Product" : "Add Product"}
             </h2>
@@ -264,7 +340,7 @@ function ProductModal({
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4 px-6 py-5">
+          <form onSubmit={handleSubmit} className="space-y-4 px-5 py-5">
             {/* Name */}
             <div className="space-y-1.5">
               <label className="block font-sans text-xs font-semibold uppercase tracking-wide text-stone-500">
@@ -351,14 +427,14 @@ function ProductModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-lg border border-stone-200 px-4 py-2 font-sans text-sm font-semibold text-stone-600 transition-colors hover:bg-stone-50"
+                className="rounded-lg border border-stone-200 px-4 py-2.5 font-sans text-sm font-semibold text-stone-600 transition-colors hover:bg-stone-50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="rounded-lg bg-stone-900 px-4 py-2 font-sans text-sm font-semibold text-white transition-colors hover:bg-stone-700 disabled:opacity-60"
+                className="rounded-lg bg-stone-900 px-4 py-2.5 font-sans text-sm font-semibold text-white transition-colors hover:bg-stone-700 disabled:opacity-60"
               >
                 {loading ? "Saving…" : product ? "Save Changes" : "Add Product"}
               </button>
