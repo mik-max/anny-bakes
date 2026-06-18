@@ -60,24 +60,24 @@ export default function HeroSection() {
           {/* Left: eyebrow + headline */}
           <div>
             <p className="mb-3 text-xs font-sans font-semibold uppercase tracking-[0.22em] text-white/70">
-              Handcrafted Goodness
+              Small Batch. Real Ingredients.
             </p>
             <h1 className="font-serif text-[clamp(3rem,7vw,5.5rem)] font-semibold leading-[1.05] text-[#F5EFE6]">
-              Freshly Baked.
+              Baked Fresh.
               <br />
-              Made{" "}
-              <em className="font-serif italic font-normal">with Love</em>
+              Every{" "}
+              <em className="font-serif italic font-normal">Single Day.</em>
             </h1>
           </div>
 
           {/* Right: description + CTA */}
           <div className="flex flex-col items-start gap-5 md:items-end md:max-w-[320px]">
             <p className="font-sans text-sm leading-relaxed text-white/75 md:text-right">
-              Delight in artisan breads, pastries, and cakes baked fresh every
-              day using the finest ingredients.
+              From classic sponges to indulgent cakes — everything leaves our
+              kitchen fresh, never frozen.
             </p>
             <ScrollLink
-              targetId="catalogue"
+              targetId="full-menu"
               className="inline-flex items-center gap-2 bg-[#F5EFE6] px-6 py-3 text-sm font-sans font-medium text-stone-900 transition-colors hover:bg-white"
             >
               View Our Menu <span aria-hidden>→</span>
