@@ -3,13 +3,17 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCartStore, CartItem } from "@/store/cart";
 import { cn } from "@/lib/utils";
 import { CURRENCY_SYMBOL } from "@/constants";
 
 export default function CartDrawer() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
   const { items, removeItem, updateQuantity, subtotalCents } = useCartStore();
+
+  if (pathname.startsWith("/admin") || pathname.startsWith("/sign-in")) return null;
 
   const totalItems = items.reduce((n, i) => n + i.quantity, 0);
   const subtotal = subtotalCents();
