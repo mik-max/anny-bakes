@@ -1,4 +1,4 @@
-import { mockProducts } from "@/data/products";
+import { getAllProducts } from "@/data/products";
 import ProductCard from "@/components/ProductCard";
 
 export default function CatalogueSection() {
@@ -21,7 +21,7 @@ export default function CatalogueSection() {
 
         {/* Product grid */}
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {mockProducts.map((product) => (
+          {getAllProducts().map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>

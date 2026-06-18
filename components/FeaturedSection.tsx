@@ -1,9 +1,9 @@
-import { mockProducts } from "@/data/products";
+import { getAllProducts } from "@/data/products";
 import ProductCard from "@/components/ProductCard";
 import ScrollLink from "@/components/ScrollLink";
 
 export default function FeaturedSection() {
-  const featured = mockProducts.slice(0, 3);
+  const featured = getAllProducts().slice(0, 3);
 
   return (
     <section className="bg-[#FAF6F0] px-6 py-20 md:py-28">
