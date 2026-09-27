@@ -313,6 +313,7 @@ function ProductModal({
     const input: ProductInput = {
       name: (fd.get("name") as string).trim(),
       description: (fd.get("description") as string).trim(),
+      ingredients: (fd.get("ingredients") as string).trim(),
       category: fd.get("category") as ProductCategory,
       price: Math.round(priceRaw * 100),
       image_url: (fd.get("image_url") as string).trim(),
@@ -373,6 +374,20 @@ function ProductModal({
                 rows={3}
                 defaultValue={product?.description ?? ""}
                 placeholder="Short description shown on the menu"
+                className="w-full resize-none rounded-lg border border-stone-200 px-3 py-2.5 font-sans text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-900/20"
+              />
+            </div>
+
+            {/* Ingredients */}
+            <div className="space-y-1.5">
+              <label className="block font-sans text-xs font-semibold uppercase tracking-wide text-stone-500">
+                Ingredients &amp; allergens
+              </label>
+              <textarea
+                name="ingredients"
+                rows={2}
+                defaultValue={product?.ingredients ?? ""}
+                placeholder="e.g. Flour, butter, eggs, hazelnuts. Contains: gluten, dairy, eggs, nuts."
                 className="w-full resize-none rounded-lg border border-stone-200 px-3 py-2.5 font-sans text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-900/20"
               />
             </div>

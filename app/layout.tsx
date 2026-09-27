@@ -23,7 +23,7 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: "Anny Bakes Cakes and Treats",
   description:
-    "Handcrafted cakes, pastries, and treats baked fresh every day. Order online for pickup or delivery.",
+    "Small-batch breads, pastries and treats, baked fresh to order. Pre-order the weekly drop online for pickup.",
 };
 
 export default function RootLayout({

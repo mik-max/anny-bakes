@@ -17,6 +17,7 @@ export interface Product {
   id: string;
   name: string;
   description: string;
+  ingredients: string; // free text incl. allergens; empty until the client supplies it
   category: ProductCategory;
   price: number; // cents (USD)
   image_url: string;
@@ -47,6 +48,18 @@ export interface WeeklyDrop {
 
 // Derived from opens_at / closes_at — never stored.
 export type DropStatus = "scheduled" | "open" | "closed";
+
+/** The open or next scheduled drop, joined with its products, for the storefront. */
+export interface StorefrontDrop {
+  id: string;
+  name: string;
+  status: Exclude<DropStatus, "closed">;
+  opens_at: string;
+  closes_at: string;
+  pickup_date: string;
+  pickup_window: string;
+  items: { product: Product; remaining: number }[];
+}
 
 /** What the admin drop form submits. Times are bakery-local "YYYY-MM-DDTHH:mm". */
 export interface DropFormInput {

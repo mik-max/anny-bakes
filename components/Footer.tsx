@@ -17,7 +17,7 @@ export default function Footer() {
             <p className="font-serif text-2xl text-white">Anny Bakes</p>
             <p className="mt-0.5 font-sans text-sm text-stone-400">Cakes &amp; Treats</p>
             <p className="mt-4 max-w-xs font-sans text-sm leading-relaxed text-stone-500">
-              Handcrafted with real ingredients, baked fresh every single day.
+              Small batch. Real ingredients. Baked fresh to order.
             </p>
           </div>
 
@@ -27,17 +27,17 @@ export default function Footer() {
               Quick Links
             </p>
             <ScrollLink
-              targetId="catalogue"
+              targetId="weekly-drop"
               className="text-left font-sans text-sm text-stone-400 transition-colors hover:text-white"
             >
-              Order Now
+              Weekly Drop
             </ScrollLink>
-            <ScrollLink
-              targetId="full-menu"
+            <Link
+              href="/menu"
               className="text-left font-sans text-sm text-stone-400 transition-colors hover:text-white"
             >
-              Our Menu
-            </ScrollLink>
+              Full Menu
+            </Link>
           </nav>
         </div>
       </div>

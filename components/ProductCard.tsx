@@ -1,28 +1,19 @@
-"use client";
-
 import Image from "next/image";
-import { useCartStore } from "@/store/cart";
+import type { ReactNode } from "react";
 import { Product } from "@/types";
-import { cn } from "@/lib/utils";
 import { CURRENCY_SYMBOL } from "@/constants";
 
 interface ProductCardProps {
   product: Product;
-  /** Elevates the card above its siblings — used for the staggered hero grid */
-  elevated?: boolean;
+  /** Small label over the image, e.g. "3 left" */
+  badge?: ReactNode;
+  /** Shown beside the price, e.g. an add-to-cart button */
+  action?: ReactNode;
 }
 
-export default function ProductCard({ product, elevated }: ProductCardProps) {
-  const addItem = useCartStore((s) => s.addItem);
-
+export default function ProductCard({ product, badge, action }: ProductCardProps) {
   return (
-    <div
-      className={cn(
-        "overflow-hidden rounded-2xl bg-white shadow-md transition-shadow hover:shadow-lg",
-        elevated ? "md:mt-0" : "md:mt-10",
-        !product.in_stock && "opacity-60"
-      )}
-    >
+    <div className="flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-md transition-shadow hover:shadow-lg">
       {/* Product image */}
       <div className="relative h-56 w-full">
         {product.image_url ? (
@@ -39,28 +30,33 @@ export default function ProductCard({ product, elevated }: ProductCardProps) {
             {product.category}
           </div>
         )}
+        {badge && (
+          <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 font-sans text-xs font-semibold text-stone-800 shadow-sm">
+            {badge}
+          </span>
+        )}
       </div>
 
       {/* Card body */}
-      <div className="p-5">
-        <h3 className="mb-1.5 font-serif italic text-xl text-stone-800">
-          {product.name}
-        </h3>
-        <p className="mb-5 line-clamp-2 font-sans text-sm leading-relaxed text-stone-500">
-          {product.description}
-        </p>
-        <div className="flex items-center justify-between">
+      <div className="flex flex-1 flex-col p-5">
+        <h3 className="mb-1.5 font-serif italic text-xl text-stone-800">{product.name}</h3>
+        {product.description && (
+          <p className="mb-3 line-clamp-2 font-sans text-sm leading-relaxed text-stone-500">
+            {product.description}
+          </p>
+        )}
+        {product.ingredients && (
+          <p className="mb-3 font-sans text-xs leading-relaxed text-stone-400">
+            <span className="font-semibold text-stone-500">Ingredients: </span>
+            {product.ingredients}
+          </p>
+        )}
+        <div className="mt-auto flex items-center justify-between pt-2">
           <span className="font-sans text-base font-semibold text-stone-900">
             {CURRENCY_SYMBOL}
             {(product.price / 100).toFixed(2)}
           </span>
-          <button
-            onClick={() => addItem(product)}
-            disabled={!product.in_stock}
-            className="font-sans text-sm text-amber-700 transition-colors hover:text-amber-900 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {product.in_stock ? "Add to Cart →" : "Out of Stock"}
-          </button>
+          {action}
         </div>
       </div>
     </div>

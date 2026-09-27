@@ -76,7 +76,7 @@ export default function HeroSection() {
 
           {/* Right: Order Now — hidden on mobile, replaced by the hero CTA below */}
           <ScrollLink
-            targetId="catalogue"
+            targetId="weekly-drop"
             className="hidden items-center gap-1.5 text-sm text-white/90 transition-colors hover:text-white sm:flex"
           >
             Order Now <span aria-hidden>→</span>
@@ -97,25 +97,24 @@ export default function HeroSection() {
               Small Batch. Real Ingredients.
             </p>
             <h1 className="hero-headline font-serif text-[clamp(2.25rem,7vw,5.5rem)] font-semibold leading-[1.05] text-[#F5EFE6]">
-              Baked Fresh.
+              Baked Fresh
               <br />
-              Every{" "}
-              <em className="font-serif font-normal italic">Single Day.</em>
+              <em className="font-serif font-normal italic">to Order.</em>
             </h1>
           </div>
 
           {/* Right: description + CTA */}
           <div className="flex flex-col items-start gap-5 md:max-w-[320px] md:items-end">
             <p className="hero-description font-sans text-sm leading-relaxed text-white/75 md:text-right">
-              From classic sponges to indulgent cakes — everything leaves our
-              kitchen fresh, never frozen.
+              Cookies, muffins, cakes, breads and pastries — never frozen.
+              Annything, baked fresh.
             </p>
             <div className="hero-cta">
               <ScrollLink
-                targetId="full-menu"
+                targetId="weekly-drop"
                 className="inline-flex items-center gap-2 bg-[#F5EFE6] px-6 py-3 font-sans text-sm font-medium text-stone-900 transition-colors hover:bg-white"
               >
-                View Our Menu <span aria-hidden>→</span>
+                View Weekly Menu <span aria-hidden>→</span>
               </ScrollLink>
             </div>
           </div>

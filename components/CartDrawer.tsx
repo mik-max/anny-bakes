@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -9,9 +8,16 @@ import { cn } from "@/lib/utils";
 import { CURRENCY_SYMBOL } from "@/constants";
 
 export default function CartDrawer() {
-  const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const { items, removeItem, updateQuantity, subtotalCents } = useCartStore();
+  const {
+    items,
+    isOpen: open,
+    openCart,
+    closeCart,
+    removeItem,
+    updateQuantity,
+    subtotalCents,
+  } = useCartStore();
 
   if (pathname.startsWith("/admin") || pathname.startsWith("/sign-in")) return null;
 
@@ -22,7 +28,7 @@ export default function CartDrawer() {
     <>
       {/* ── Floating cart trigger ── */}
       <button
-        onClick={() => setOpen(true)}
+        onClick={openCart}
         aria-label="Open cart"
         className={cn(
           "fixed bottom-6 right-6 z-40 flex items-center gap-2.5 rounded-full bg-stone-900 px-4 py-3 text-white shadow-lg transition-colors hover:bg-stone-700",
@@ -39,7 +45,7 @@ export default function CartDrawer() {
 
       {/* ── Backdrop ── */}
       <div
-        onClick={() => setOpen(false)}
+        onClick={closeCart}
         className={cn(
           "fixed inset-0 z-40 bg-black/30 transition-opacity duration-300",
           open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
@@ -57,7 +63,7 @@ export default function CartDrawer() {
         <div className="flex items-center justify-between border-b border-stone-100 px-4 py-4 sm:px-6 sm:py-5">
           <h2 className="font-serif text-xl text-stone-900 sm:text-2xl">Your Cart</h2>
           <button
-            onClick={() => setOpen(false)}
+            onClick={closeCart}
             aria-label="Close cart"
             className="flex h-8 w-8 items-center justify-center rounded-full text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-700"
           >
@@ -101,7 +107,7 @@ export default function CartDrawer() {
             </p>
             <Link
               href="/checkout"
-              onClick={() => setOpen(false)}
+              onClick={closeCart}
               className="flex w-full items-center justify-center gap-2 bg-stone-900 py-4 font-sans text-sm font-semibold text-white transition-colors hover:bg-stone-700"
             >
               Proceed to Checkout <span aria-hidden>→</span>
@@ -125,14 +131,16 @@ function CartLineItem({
   return (
     <li className="flex gap-4 py-4">
       {/* Thumbnail */}
-      <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl">
-        <Image
-          src={item.product.image_url}
-          alt={item.product.name}
-          fill
-          className="object-cover"
-          sizes="64px"
-        />
+      <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl bg-[#F5EFE6]">
+        {item.product.image_url && (
+          <Image
+            src={item.product.image_url}
+            alt={item.product.name}
+            fill
+            className="object-cover"
+            sizes="64px"
+          />
+        )}
       </div>
 
       {/* Details */}
@@ -165,8 +173,9 @@ function CartLineItem({
             </span>
             <button
               onClick={() => onUpdateQty(item.quantity + 1)}
+              disabled={item.quantity >= item.maxQuantity}
               aria-label="Increase quantity"
-              className="font-sans text-sm text-stone-400 transition-colors hover:text-stone-900"
+              className="font-sans text-sm text-stone-400 transition-colors hover:text-stone-900 disabled:cursor-not-allowed disabled:opacity-30"
             >
               +
             </button>

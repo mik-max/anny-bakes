@@ -14,7 +14,9 @@ async function collection() {
 function toProduct({ _id, created_at, ...rest }: WithId<ProductDoc>): Product {
   return {
     ...rest,
-    featured: rest.featured ?? false, // older documents predate this field
+    // Older documents predate these fields
+    featured: rest.featured ?? false,
+    ingredients: rest.ingredients ?? "",
     id: _id.toString(),
     created_at: created_at.toISOString(),
   };

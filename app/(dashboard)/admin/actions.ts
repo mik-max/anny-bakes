@@ -32,6 +32,7 @@ function parseProduct(
   const product: ProductInput = {
     name: String(data.name ?? "").trim(),
     description: String(data.description ?? "").trim(),
+    ingredients: String(data.ingredients ?? "").trim(),
     category: data.category,
     price: Number(data.price),
     image_url: String(data.image_url ?? "").trim(),

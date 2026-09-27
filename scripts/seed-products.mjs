@@ -70,6 +70,7 @@ async function insertMenu(products) {
     MENU.map(([name, category, price, image_url = ""]) => ({
       name,
       description: "",
+      ingredients: "",
       category,
       price,
       image_url,

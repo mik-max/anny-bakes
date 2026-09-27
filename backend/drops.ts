@@ -2,7 +2,8 @@ import "server-only";
 import { ObjectId, type WithId } from "mongodb";
 import { getDb } from "@/backend/db";
 import { getProductsByIds } from "@/backend/products";
-import type { DropItem, WeeklyDrop } from "@/types";
+import { getDropStatus, remainingUnits } from "@/lib/drops";
+import type { DropItem, StorefrontDrop, WeeklyDrop } from "@/types";
 
 export interface DropInput {
   name: string;
@@ -59,6 +60,32 @@ export async function getCurrentDrop(now = new Date()): Promise<WeeklyDrop | nul
 
   const [next] = await col.find({ opens_at: { $gt: now } }).sort({ opens_at: 1 }).limit(1).toArray();
   return next ? toDrop(next) : null;
+}
+
+/** getCurrentDrop joined with product details, ready for the home page. */
+export async function getStorefrontDrop(now = new Date()): Promise<StorefrontDrop | null> {
+  const drop = await getCurrentDrop(now);
+  if (!drop) return null;
+
+  const status = getDropStatus(drop, now);
+  if (status === "closed") return null;
+
+  const products = await getProductsByIds(drop.items.map((i) => i.product_id));
+  const byId = new Map(products.map((p) => [p.id, p]));
+
+  return {
+    id: drop.id,
+    name: drop.name,
+    status,
+    opens_at: drop.opens_at,
+    closes_at: drop.closes_at,
+    pickup_date: drop.pickup_date,
+    pickup_window: drop.pickup_window,
+    items: drop.items.flatMap((item) => {
+      const product = byId.get(item.product_id);
+      return product ? [{ product, remaining: remainingUnits(item) }] : [];
+    }),
+  };
 }
 
 /** True if the product is in a drop that hasn't closed yet. */
