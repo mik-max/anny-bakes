@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { mockOrders } from "@/data/orders";
+import { getAllOrders } from "@/backend/orders";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { CURRENCY_SYMBOL } from "@/constants";
 import { Order } from "@/types";
@@ -26,19 +26,20 @@ function formatDate(iso: string) {
   });
 }
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminOrdersPage({
   searchParams,
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
   const { status = "all" } = await searchParams;
+  const orders = await getAllOrders();
 
+  // getAllOrders returns newest first
   const filtered =
-    status === "all" ? mockOrders : mockOrders.filter((o) => o.status === status);
+    status === "all" ? orders : orders.filter((o) => o.status === status);
 
-  const sorted = [...filtered].sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  );
 
   return (
     <div>
@@ -46,7 +47,7 @@ export default async function AdminOrdersPage({
       <div className="mb-5">
         <h1 className="font-sans text-2xl font-semibold text-stone-900">Orders</h1>
         <p className="mt-0.5 font-sans text-sm text-stone-500">
-          {mockOrders.length} order{mockOrders.length !== 1 ? "s" : ""} total
+          {orders.length} order{orders.length !== 1 ? "s" : ""} total
         </p>
       </div>
 
@@ -55,8 +56,8 @@ export default async function AdminOrdersPage({
         {FILTER_TABS.map((tab) => {
           const count =
             tab.value === "all"
-              ? mockOrders.length
-              : mockOrders.filter((o) => o.status === tab.value).length;
+              ? orders.length
+              : orders.filter((o) => o.status === tab.value).length;
           const isActive = status === tab.value;
           return (
             <Link
@@ -81,7 +82,7 @@ export default async function AdminOrdersPage({
         })}
       </div>
 
-      {sorted.length === 0 ? (
+      {filtered.length === 0 ? (
         <div className="rounded-xl border border-stone-100 bg-white p-12 text-center">
           <p className="font-sans text-sm text-stone-400">No orders found</p>
         </div>
@@ -89,7 +90,7 @@ export default async function AdminOrdersPage({
         <>
           {/* ── Mobile: card list ── */}
           <div className="space-y-3 sm:hidden">
-            {sorted.map((order) => (
+            {filtered.map((order) => (
               <OrderCard key={order.id} order={order} />
             ))}
           </div>
@@ -109,7 +110,7 @@ export default async function AdminOrdersPage({
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-50">
-                {sorted.map((order) => (
+                {filtered.map((order) => (
                   <tr key={order.id} className="transition-colors hover:bg-stone-50/50">
                     <td className="px-4 py-3.5 font-sans text-sm font-medium text-stone-900">
                       {order.order_number}
@@ -154,7 +155,7 @@ export default async function AdminOrdersPage({
 // ── Mobile order card ────────────────────────────────────────────────────────
 
 function OrderCard({ order }: { order: Order }) {
-  const itemCount = order.items?.length ?? 0;
+  const itemCount = order.items.length;
 
   return (
     <Link

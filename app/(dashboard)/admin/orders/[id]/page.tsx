@@ -1,20 +1,14 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getOrderById } from "@/data/orders";
+import { getOrderById } from "@/backend/orders";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { updateOrderStatus } from "@/app/(dashboard)/admin/actions";
 import { CURRENCY_SYMBOL } from "@/constants";
 import { OrderStatus } from "@/types";
+import { ADMIN_STATUS_TRANSITIONS } from "@/lib/orders";
+import { formatPickupDate } from "@/lib/time";
 
-const NEXT_STATUSES: Record<OrderStatus, OrderStatus[]> = {
-  pending:   ["cancelled"],
-  paid:      ["preparing", "cancelled"],
-  preparing: ["ready", "cancelled"],
-  ready:     ["fulfilled", "cancelled"],
-  fulfilled: [],
-  cancelled: [],
-  refunded:  [],
-};
+export const dynamic = "force-dynamic";
 
 const STATUS_BUTTON_LABELS: Partial<Record<OrderStatus, string>> = {
   preparing: "Mark as Preparing",
@@ -43,10 +37,10 @@ export default async function OrderDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const order = getOrderById(id);
+  const order = await getOrderById(id);
   if (!order) notFound();
 
-  const nextStatuses = NEXT_STATUSES[order.status];
+  const nextStatuses = ADMIN_STATUS_TRANSITIONS[order.status];
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -81,8 +75,8 @@ export default async function OrderDetailPage({
               <h2 className="font-sans text-sm font-semibold text-stone-700">Items</h2>
             </div>
             <ul className="divide-y divide-stone-50">
-              {order.items?.map((item) => (
-                <li key={item.id} className="flex items-center justify-between px-5 py-3.5">
+              {order.items.map((item) => (
+                <li key={item.product_id} className="flex items-center justify-between px-5 py-3.5">
                   <div>
                     <p className="font-sans text-sm text-stone-900">{item.product_name}</p>
                     <p className="font-sans text-xs text-stone-400">
@@ -146,6 +140,12 @@ export default async function OrderDetailPage({
                   );
                 })}
               </div>
+              {nextStatuses.includes("cancelled") && (
+                <p className="mt-3 font-sans text-xs text-stone-400">
+                  Cancelling returns the items to the drop but doesn&apos;t refund the
+                  customer — issue refunds from the Stripe dashboard.
+                </p>
+              )}
             </section>
           )}
         </div>
@@ -167,6 +167,9 @@ export default async function OrderDetailPage({
             </p>
             <p className="font-sans text-sm font-semibold capitalize text-stone-900">
               {order.fulfilment_method}
+            </p>
+            <p className="mt-1 font-sans text-sm text-stone-500">
+              {formatPickupDate(order.pickup_date)}, {order.pickup_window}
             </p>
             {order.delivery_address && (
               <p className="mt-1 font-sans text-sm text-stone-500">{order.delivery_address}</p>

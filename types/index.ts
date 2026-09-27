@@ -3,7 +3,8 @@ import { PRODUCT_CATEGORIES } from "@/constants";
 export type FulfilmentMethod = "pickup" | "delivery";
 
 export type OrderStatus =
-  | "pending"
+  | "pending" // checkout started, stock held, awaiting payment
+  | "expired" // checkout abandoned — stock released
   | "paid"
   | "preparing"
   | "ready"
@@ -72,8 +73,6 @@ export interface DropFormInput {
 }
 
 export interface OrderItem {
-  id: string;
-  order_id: string;
   product_id: string;
   product_name: string; // snapshot
   unit_price: number; // snapshot, cents
@@ -89,6 +88,9 @@ export interface Order {
   fulfilment_method: FulfilmentMethod;
   delivery_address: string | null;
   note: string | null;
+  drop_id: string;
+  pickup_date: string; // YYYY-MM-DD, copied from the drop
+  pickup_window: string;
   subtotal: number; // cents
   delivery_fee: number; // cents
   total: number; // cents
@@ -98,5 +100,5 @@ export interface Order {
   stripe_payment_intent: string | null;
   created_at: string;
   updated_at: string;
-  items?: OrderItem[];
+  items: OrderItem[];
 }

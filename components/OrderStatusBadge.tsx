@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 
 const STATUS_STYLES: Record<OrderStatus, string> = {
   pending:   "bg-stone-100 text-stone-600",
+  expired:   "bg-stone-100 text-stone-400",
   paid:      "bg-blue-50 text-blue-700",
   preparing: "bg-amber-50 text-amber-700",
   ready:     "bg-emerald-50 text-emerald-700",
@@ -13,6 +14,7 @@ const STATUS_STYLES: Record<OrderStatus, string> = {
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
   pending:   "Pending",
+  expired:   "Expired",
   paid:      "Paid",
   preparing: "Preparing",
   ready:     "Ready",

@@ -1,23 +1,24 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useCartStore } from "@/store/cart";
 import { cn } from "@/lib/utils";
-import {
-  CURRENCY_SYMBOL,
-  DELIVERY_FEE_CENTS,
-  FREE_DELIVERY_THRESHOLD_CENTS,
-} from "@/constants";
-import { createCheckoutSession } from "@/app/checkout/actions";
-import type { FulfilmentMethod } from "@/types";
+import { CURRENCY_SYMBOL } from "@/constants";
+import { formatPickupDate } from "@/lib/time";
+import { PENDING_CHECKOUT_KEY } from "@/lib/checkout";
+import { cancelCheckout, createCheckoutSession } from "@/app/checkout/actions";
+
+export interface CheckoutPickup {
+  dropId: string;
+  pickupDate: string;
+  pickupWindow: string;
+}
 
 interface FormState {
   customerName: string;
   email: string;
   phone: string;
-  fulfilmentMethod: FulfilmentMethod;
-  deliveryAddress: string;
   note: string;
 }
 
@@ -25,26 +26,34 @@ const empty: FormState = {
   customerName: "",
   email: "",
   phone: "",
-  fulfilmentMethod: "pickup",
-  deliveryAddress: "",
   note: "",
 };
 
-export default function CheckoutForm() {
-  const router = useRouter();
-  const { items, subtotalCents, clearCart } = useCartStore();
+export default function CheckoutForm({ pickup }: { pickup: CheckoutPickup | null }) {
+  const { items, dropId, subtotalCents, clearCart } = useCartStore();
   const [form, setForm] = useState<FormState>(empty);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const subtotal = subtotalCents();
-  const isDelivery = form.fulfilmentMethod === "delivery";
-  const deliveryFee = isDelivery
-    ? subtotal >= FREE_DELIVERY_THRESHOLD_CENTS
-      ? 0
-      : DELIVERY_FEE_CENTS
-    : 0;
-  const total = subtotal + deliveryFee;
+  const cartMatchesDrop = pickup !== null && dropId === pickup.dropId;
+
+  // Back from Stripe without paying? Cancel that session so its stock is freed now.
+  useEffect(() => {
+    let sessionId: string | null = null;
+    try {
+      sessionId = sessionStorage.getItem(PENDING_CHECKOUT_KEY);
+      sessionStorage.removeItem(PENDING_CHECKOUT_KEY);
+    } catch {
+      return;
+    }
+    if (sessionId) void cancelCheckout(sessionId);
+  }, []);
+
+  // The drop this cart was filled from has closed — its items can't be ordered.
+  useEffect(() => {
+    if (items.length > 0 && !cartMatchesDrop) clearCart();
+  }, [items.length, cartMatchesDrop, clearCart]);
 
   const field =
     (key: keyof FormState) =>
@@ -53,7 +62,7 @@ export default function CheckoutForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (items.length === 0) return;
+    if (items.length === 0 || !pickup) return;
 
     setLoading(true);
     setError(null);
@@ -62,41 +71,42 @@ export default function CheckoutForm() {
       customerName: form.customerName,
       email: form.email,
       phone: form.phone,
-      fulfilmentMethod: form.fulfilmentMethod,
-      deliveryAddress: form.deliveryAddress || undefined,
       note: form.note || undefined,
+      dropId: pickup.dropId,
       items: items.map((i) => ({ productId: i.product.id, quantity: i.quantity })),
     });
 
-    if (result.error) {
+    if (result.error !== undefined) {
       setError(result.error);
       setLoading(false);
       return;
     }
 
-    if (result.url) {
-      // Stripe redirect — backend wired
-      window.location.href = result.url;
-    } else {
-      // Stub: clear cart and go to success page until Stripe is connected
-      clearCart();
-      router.push("/checkout/success");
+    try {
+      sessionStorage.setItem(PENDING_CHECKOUT_KEY, result.sessionId);
+    } catch {
+      // Storage unavailable — the session still expires on its own.
     }
+    window.location.href = result.url;
   }
 
-  if (items.length === 0) {
+  if (items.length === 0 || !pickup) {
     return (
       <div className="flex flex-col items-center py-24 text-center">
-        <p className="font-serif text-2xl text-stone-600">Your cart is empty</p>
-        <p className="mt-2 font-sans text-sm text-stone-400">
-          Add some items before checking out.
+        <p className="font-serif text-2xl text-stone-600">
+          {pickup ? "Your cart is empty" : "No drop is open right now"}
         </p>
-        <a
+        <p className="mt-2 font-sans text-sm text-stone-400">
+          {pickup
+            ? "Add some items from this week's drop before checking out."
+            : "Check back when the next weekly drop opens."}
+        </p>
+        <Link
           href="/"
           className="mt-6 font-sans text-sm font-semibold text-stone-900 underline underline-offset-4 hover:text-stone-600 transition-colors"
         >
-          Back to menu
-        </a>
+          Back to the weekly drop
+        </Link>
       </div>
     );
   }
@@ -145,40 +155,17 @@ export default function CheckoutForm() {
           </div>
         </FormSection>
 
-        {/* Fulfilment */}
-        <FormSection title="Fulfilment">
-          <div className="grid grid-cols-2 gap-3">
-            {(["pickup", "delivery"] as FulfilmentMethod[]).map((method) => (
-              <button
-                key={method}
-                type="button"
-                onClick={() =>
-                  setForm((prev) => ({ ...prev, fulfilmentMethod: method }))
-                }
-                className={cn(
-                  "rounded-xl border-2 py-4 font-sans text-sm font-medium capitalize transition-colors",
-                  form.fulfilmentMethod === method
-                    ? "border-stone-900 bg-stone-900 text-white"
-                    : "border-stone-200 text-stone-600 hover:border-stone-400"
-                )}
-              >
-                {method === "pickup" ? "Pickup" : "Delivery"}
-              </button>
-            ))}
-          </div>
-
-          {isDelivery && (
-            <Field label="Delivery Address">
-              <input
-                type="text"
-                required
-                value={form.deliveryAddress}
-                onChange={field("deliveryAddress")}
-                placeholder="123 Main St, City, State, ZIP"
-                className={input}
-              />
-            </Field>
-          )}
+        {/* Pickup */}
+        <FormSection title="Pickup">
+          <p className="font-sans text-sm text-stone-700">
+            <span className="font-semibold text-stone-900">
+              {formatPickupDate(pickup.pickupDate)}, {pickup.pickupWindow}
+            </span>
+          </p>
+          <p className="font-sans text-sm text-stone-500">
+            Orders are baked fresh for pickup. We&apos;ll email your confirmation with the
+            pickup details.
+          </p>
         </FormSection>
 
         {/* Order note */}
@@ -217,30 +204,14 @@ export default function CheckoutForm() {
 
         <div className="space-y-2 border-t border-stone-100 pt-4">
           <SummaryRow label="Subtotal" value={`${CURRENCY_SYMBOL}${(subtotal / 100).toFixed(2)}`} />
-          <SummaryRow
-            label="Delivery"
-            value={
-              !isDelivery
-                ? "—"
-                : deliveryFee === 0
-                ? "Free"
-                : `${CURRENCY_SYMBOL}${(deliveryFee / 100).toFixed(2)}`
-            }
-          />
+          <SummaryRow label="Pickup" value={formatPickupDate(pickup.pickupDate)} />
           <div className="flex justify-between border-t border-stone-100 pt-3">
             <span className="font-sans font-semibold text-stone-900">Total</span>
             <span className="font-sans font-semibold text-stone-900">
-              {CURRENCY_SYMBOL}{(total / 100).toFixed(2)}
+              {CURRENCY_SYMBOL}{(subtotal / 100).toFixed(2)}
             </span>
           </div>
         </div>
-
-        {isDelivery && deliveryFee > 0 && (
-          <p className="mt-3 font-sans text-xs text-stone-400">
-            Free delivery on orders over {CURRENCY_SYMBOL}
-            {(FREE_DELIVERY_THRESHOLD_CENTS / 100).toFixed(0)}.
-          </p>
-        )}
 
         {error && (
           <p className="mt-4 font-sans text-sm text-red-500">{error}</p>
@@ -251,7 +222,7 @@ export default function CheckoutForm() {
           disabled={loading}
           className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-stone-900 py-4 font-sans text-sm font-semibold text-white transition-colors hover:bg-stone-700 disabled:opacity-60"
         >
-          {loading ? "Processing…" : "Place Order →"}
+          {loading ? "Redirecting to payment…" : "Continue to Payment →"}
         </button>
 
         <p className="mt-3 text-center font-sans text-xs text-stone-400">

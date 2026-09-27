@@ -10,10 +10,15 @@ import {
 } from "@/backend/products";
 import { requireAdmin } from "@/backend/auth";
 import { isProductInUpcomingDrop } from "@/backend/drops";
+import { getOrderById, updateOrderStatus as setOrderStatus } from "@/backend/orders";
+import { ADMIN_STATUS_TRANSITIONS } from "@/lib/orders";
 
-// TODO: replace order mutations with real DB calls once backend is provisioned
 export async function updateOrderStatus(orderId: string, status: OrderStatus) {
   await requireAdmin();
+  const order = await getOrderById(orderId);
+  // Ignore stale buttons (e.g. two admins acting on the same order).
+  if (!order || !ADMIN_STATUS_TRANSITIONS[order.status].includes(status)) return;
+  await setOrderStatus(orderId, status);
   revalidatePath("/admin");
   revalidatePath(`/admin/orders/${orderId}`);
 }

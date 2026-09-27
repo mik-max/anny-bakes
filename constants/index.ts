@@ -6,11 +6,9 @@ export const BAKERY_TIMEZONE = "America/Toronto";
 export const DEFAULT_PICKUP_WINDOW = "3–5pm";
 export const CURRENCY_SYMBOL = "$";
 
-export const DELIVERY_FEE_CENTS = 500; // $5.00
-export const FREE_DELIVERY_THRESHOLD_CENTS = 5000; // free delivery above $50.00
-
 export const ORDER_STATUSES = [
   "pending",
+  "expired",
   "paid",
   "preparing",
   "ready",

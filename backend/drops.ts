@@ -88,6 +88,60 @@ export async function getStorefrontDrop(now = new Date()): Promise<StorefrontDro
   };
 }
 
+export type UnitRequest = { product_id: string; quantity: number };
+
+/**
+ * Atomically holds stock for a checkout. Succeeds only if the drop is open and
+ * every item has enough units left — otherwise nothing is reserved.
+ * `items` must not repeat a product.
+ */
+export async function reserveUnits(dropId: string, items: UnitRequest[]): Promise<boolean> {
+  if (!ObjectId.isValid(dropId) || items.length === 0) return false;
+  const now = new Date();
+
+  const hasRoom = ({ product_id, quantity }: UnitRequest) => ({
+    $gt: [
+      {
+        $size: {
+          $filter: {
+            input: "$items",
+            as: "item",
+            cond: {
+              $and: [
+                { $eq: ["$$item.product_id", product_id] },
+                { $lte: [{ $add: ["$$item.reserved", quantity] }, "$$item.quantity"] },
+              ],
+            },
+          },
+        },
+      },
+      0,
+    ],
+  });
+
+  const { modifiedCount } = await (await collection()).updateOne(
+    {
+      _id: new ObjectId(dropId),
+      opens_at: { $lte: now },
+      closes_at: { $gt: now },
+      $expr: { $and: items.map(hasRoom) },
+    },
+    { $inc: Object.fromEntries(items.map((item, n) => [`items.$[i${n}].reserved`, item.quantity])) },
+    { arrayFilters: items.map((item, n) => ({ [`i${n}.product_id`]: item.product_id })) }
+  );
+  return modifiedCount === 1;
+}
+
+/** Returns held units to the drop (checkout expired or order cancelled). */
+export async function releaseUnits(dropId: string, items: UnitRequest[]): Promise<void> {
+  if (!ObjectId.isValid(dropId) || items.length === 0) return;
+  await (await collection()).updateOne(
+    { _id: new ObjectId(dropId) },
+    { $inc: Object.fromEntries(items.map((item, n) => [`items.$[i${n}].reserved`, -item.quantity])) },
+    { arrayFilters: items.map((item, n) => ({ [`i${n}.product_id`]: item.product_id })) }
+  );
+}
+
 /** True if the product is in a drop that hasn't closed yet. */
 export async function isProductInUpcomingDrop(productId: string): Promise<boolean> {
   const doc = await (await collection()).findOne({
