@@ -228,6 +228,17 @@ export default function CheckoutForm({ pickup }: { pickup: CheckoutPickup | null
         <p className="mt-3 text-center font-sans text-xs text-stone-400">
           Secure payment powered by Stripe
         </p>
+        <p className="mt-1 text-center font-sans text-xs text-stone-400">
+          By ordering you agree to our{" "}
+          <Link href="/refunds" className="underline underline-offset-2 hover:text-stone-600">
+            refund policy
+          </Link>{" "}
+          and{" "}
+          <Link href="/disclaimer" className="underline underline-offset-2 hover:text-stone-600">
+            allergen disclaimer
+          </Link>
+          .
+        </p>
       </aside>
     </form>
   );

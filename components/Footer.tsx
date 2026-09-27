@@ -3,6 +3,12 @@
 import Link from "next/link";
 import ScrollLink from "@/components/ScrollLink";
 
+const LEGAL_LINKS = [
+  { href: "/privacy", label: "Privacy" },
+  { href: "/refunds", label: "Refunds" },
+  { href: "/disclaimer", label: "Disclaimer" },
+];
+
 export default function Footer() {
   const year = new Date().getFullYear();
 
@@ -54,12 +60,23 @@ export default function Footer() {
           <p className="font-sans text-xs text-stone-600">
             © {year} Anny Bakes Cakes and Treats.
           </p>
-          <Link
-            href="/sign-in"
-            className="font-sans text-xs text-stone-700 transition-colors hover:text-stone-500"
-          >
-            Admin
-          </Link>
+          <nav className="flex flex-wrap items-center gap-x-5 gap-y-1">
+            {LEGAL_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="font-sans text-xs text-stone-500 transition-colors hover:text-white"
+              >
+                {link.label}
+              </Link>
+            ))}
+            <Link
+              href="/sign-in"
+              className="font-sans text-xs text-stone-700 transition-colors hover:text-stone-500"
+            >
+              Admin
+            </Link>
+          </nav>
         </div>
       </div>
     </footer>
