@@ -12,7 +12,12 @@ async function collection() {
 }
 
 function toProduct({ _id, created_at, ...rest }: WithId<ProductDoc>): Product {
-  return { ...rest, id: _id.toString(), created_at: created_at.toISOString() };
+  return {
+    ...rest,
+    featured: rest.featured ?? false, // older documents predate this field
+    id: _id.toString(),
+    created_at: created_at.toISOString(),
+  };
 }
 
 export async function getAllProducts(): Promise<Product[]> {
@@ -24,6 +29,13 @@ export async function getProductById(id: string): Promise<Product | null> {
   if (!ObjectId.isValid(id)) return null;
   const doc = await (await collection()).findOne({ _id: new ObjectId(id) });
   return doc ? toProduct(doc) : null;
+}
+
+export async function getProductsByIds(ids: string[]): Promise<Product[]> {
+  const objectIds = [...new Set(ids)].filter(ObjectId.isValid).map((id) => new ObjectId(id));
+  if (objectIds.length === 0) return [];
+  const docs = await (await collection()).find({ _id: { $in: objectIds } }).toArray();
+  return docs.map(toProduct);
 }
 
 export async function createProduct(data: ProductInput): Promise<Product> {

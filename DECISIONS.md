@@ -19,6 +19,14 @@ Answers from the pre-launch questionnaire (received 27 Sep 2026). Target launch:
 | Visitor analytics | Yes. |
 | Post-launch support | To be discussed when new features are needed. |
 
+## Home page structure (agreed 27 Sep 2026)
+
+- **"Our Best Sellers" section becomes "Your Weekly Drops"**: a countdown timer (to open or close), drop items with an "X left" count, the "Order weekly drop" button, and the pre-order and pickup text.
+- **"Our Full Menu" section becomes "Featured Best Sellers"**: products the admin marks as *featured*, followed by a "View full menu" button.
+- **"View full menu"** links to a separate `/menu` page listing all products by category. Browsing only.
+- **Only items in the open drop can be ordered.** Best sellers and the full menu are showcases; to make an item orderable, the admin adds it to a drop.
+- **Drop states:** *open*, meaning orderable, with a countdown to the cutoff. *Scheduled*, meaning a preview with a countdown to opening. *None*, showing a "next drop coming soon" message. Admins can prepare upcoming drops in advance, but only one drop can be open at a time.
+
 ## Pending from client
 
 - Web address (domain)

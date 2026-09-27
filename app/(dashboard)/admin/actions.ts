@@ -9,6 +9,7 @@ import {
   deleteProduct,
 } from "@/backend/products";
 import { requireAdmin } from "@/backend/auth";
+import { isProductInUpcomingDrop } from "@/backend/drops";
 
 // TODO: replace order mutations with real DB calls once backend is provisioned
 export async function updateOrderStatus(orderId: string, status: OrderStatus) {
@@ -35,6 +36,7 @@ function parseProduct(
     price: Number(data.price),
     image_url: String(data.image_url ?? "").trim(),
     in_stock: Boolean(data.in_stock),
+    featured: Boolean(data.featured),
   };
   if (!product.name) return { error: "Name is required." };
   if (!PRODUCT_CATEGORIES.includes(product.category)) {
@@ -72,6 +74,9 @@ export async function updateProductAction(
 
 export async function deleteProductAction(id: string): Promise<{ error?: string }> {
   await requireAdmin();
+  if (await isProductInUpcomingDrop(id)) {
+    return { error: "This product is in an open or upcoming drop. Remove it from the drop first." };
+  }
   const ok = await deleteProduct(id);
   if (!ok) return { error: "Product not found." };
   revalidatePath("/admin/products");

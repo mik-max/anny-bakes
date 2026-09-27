@@ -74,6 +74,7 @@ async function insertMenu(products) {
       price,
       image_url,
       in_stock: true,
+      featured: false,
       created_at: now,
     }))
   );

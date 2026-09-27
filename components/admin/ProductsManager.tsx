@@ -112,6 +112,7 @@ export default function ProductsManager({ products }: { products: Product[] }) {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-sans text-sm font-semibold text-stone-900">
+                  {product.featured && <span className="text-amber-700">★ </span>}
                   {product.name}
                 </p>
                 <div className="mt-1 flex items-center gap-2">
@@ -209,6 +210,11 @@ export default function ProductsManager({ products }: { products: Product[] }) {
                     <div>
                       <p className="font-sans text-sm font-medium text-stone-900">
                         {product.name}
+                        {product.featured && (
+                          <span className="ml-2 font-sans text-[11px] font-semibold text-amber-700">
+                            ★ Featured
+                          </span>
+                        )}
                       </p>
                       <p className="line-clamp-1 font-sans text-xs text-stone-400">
                         {product.description}
@@ -311,6 +317,7 @@ function ProductModal({
       price: Math.round(priceRaw * 100),
       image_url: (fd.get("image_url") as string).trim(),
       in_stock: fd.get("in_stock") === "on",
+      featured: fd.get("featured") === "on",
     };
 
     setLoading(true);
@@ -438,6 +445,19 @@ function ProductModal({
                 className="h-4 w-4 rounded border-stone-300 accent-stone-900"
               />
               <span className="font-sans text-sm text-stone-700">Available for order</span>
+            </label>
+
+            {/* Featured toggle */}
+            <label className="flex cursor-pointer items-center gap-3">
+              <input
+                name="featured"
+                type="checkbox"
+                defaultChecked={product?.featured ?? false}
+                className="h-4 w-4 rounded border-stone-300 accent-stone-900"
+              />
+              <span className="font-sans text-sm text-stone-700">
+                Feature in &ldquo;Best Sellers&rdquo; on the home page
+              </span>
             </label>
 
             {error && (

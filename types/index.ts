@@ -21,11 +21,42 @@ export interface Product {
   price: number; // cents (USD)
   image_url: string;
   in_stock: boolean;
+  featured: boolean; // shown in "Featured Best Sellers" on the home page
   created_at: string;
 }
 
 /** Fields an admin can set when creating or editing a product. */
 export type ProductInput = Omit<Product, "id" | "created_at">;
+
+export interface DropItem {
+  product_id: string;
+  quantity: number; // units available in this drop
+  reserved: number; // units held by checkouts in progress + paid orders
+}
+
+export interface WeeklyDrop {
+  id: string;
+  name: string;
+  opens_at: string; // ISO (UTC)
+  closes_at: string; // ISO (UTC)
+  pickup_date: string; // YYYY-MM-DD, bakery local date
+  pickup_window: string; // e.g. "3–5pm"
+  items: DropItem[];
+  created_at: string;
+}
+
+// Derived from opens_at / closes_at — never stored.
+export type DropStatus = "scheduled" | "open" | "closed";
+
+/** What the admin drop form submits. Times are bakery-local "YYYY-MM-DDTHH:mm". */
+export interface DropFormInput {
+  name: string;
+  opens_at: string;
+  closes_at: string;
+  pickup_date: string;
+  pickup_window: string;
+  items: { product_id: string; quantity: number }[];
+}
 
 export interface OrderItem {
   id: string;
