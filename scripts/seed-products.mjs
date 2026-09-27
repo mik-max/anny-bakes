@@ -1,13 +1,16 @@
 // Seeds the product catalogue from the client's rollout plan (Sep 2026).
 //
-//   npm run db:seed            → inserts products if the collection is empty
-//   npm run db:seed -- --reset → deletes all products first, then inserts
+//   npm run db:seed             → inserts products if the collection is empty
+//   npm run db:seed -- --reset  → deletes all products first, then inserts
+//   npm run db:seed -- --images → gives existing products their photo, if they
+//                                 don't already have one (admin edits are kept)
 //
 // Names and prices are copied as given; several are awaiting client
-// confirmation (see DECISIONS.md). Descriptions and photos are still to come.
+// confirmation (see DECISIONS.md). Descriptions are still to come.
+// Photos: public/images/products/<name>.jpg — stock photos, see IMAGE_CREDITS.md.
 import { MongoClient } from "mongodb";
 
-// [name, category, price in cents, image?]
+// [name, category, price in cents]
 const MENU = [
   ["Chocolate Cherry Sourdough", "Sourdough", 1158],
   ["Toasted Spelt Sourdough", "Sourdough", 1098],
@@ -15,7 +18,7 @@ const MENU = [
   ["Honey Garlic Rosemary Focaccia", "Focaccia", 950], // "$9.50 * 2 per 1000g flat pan" — unclear
   ["Anny's Bischoff Cookie Butter Donut", "Donuts", 450],
   ["Chocolate Babka", "Babka", 660],
-  ["Blueberry Jumbo Muffin", "Muffins", 475, "/images/bluberry_muffins.png"],
+  ["Blueberry Jumbo Muffin", "Muffins", 475],
   ["Honey Chocolate Jumbo Muffin", "Muffins", 655],
   ["Morning Glory Jumbo Muffin", "Muffins", 717],
   ["Pecan Cranberry Sandwich Loaf", "Bread", 656],
@@ -32,7 +35,7 @@ const MENU = [
   ["Rocky Road Brownie Donut", "Donuts", 625],
   ["Vanilla Cinnamon Cronut", "Donuts", 515],
   ["Lemon Blueberry Nut Mix Cake", "Cakes", 870],
-  ["Red Velvet White Cocoa Frosting Cake", "Cakes", 970, "/images/red_velvet.png"],
+  ["Red Velvet White Cocoa Frosting Cake", "Cakes", 970],
   ["Double Chocolate Garnash Sprinkle Cake", "Cakes", 1170],
   ["Choc Chunk Cookie", "Cookies", 520],
   ["Dark Choc Covered Shortbread", "Cookies", 2240],
@@ -50,30 +53,51 @@ try {
   await client.connect();
   const products = client.db(process.env.MONGODB_DB).collection("products");
 
-  if (process.argv.includes("--reset")) {
-    const { deletedCount } = await products.deleteMany({});
-    console.log(`Deleted ${deletedCount} existing products.`);
-  }
-
-  if ((await products.countDocuments()) > 0) {
-    console.log("Products already exist — nothing to do. Use --reset to replace them.");
+  if (process.argv.includes("--images")) {
+    await addMissingImages(products);
   } else {
-    await insertMenu(products);
+    if (process.argv.includes("--reset")) {
+      const { deletedCount } = await products.deleteMany({});
+      console.log(`Deleted ${deletedCount} existing products.`);
+    }
+    if ((await products.countDocuments()) > 0) {
+      console.log("Products already exist — nothing to do. Use --reset to replace them.");
+    } else {
+      await insertMenu(products);
+    }
   }
 } finally {
   await client.close();
 }
 
+/** "Anny's Berry Bomb Bun" → "/images/products/annys-berry-bomb-bun.jpg" */
+function imagePath(name) {
+  const slug = name.toLowerCase().replace(/'/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return `/images/products/${slug}.jpg`;
+}
+
+async function addMissingImages(products) {
+  let updated = 0;
+  for (const [name] of MENU) {
+    const { modifiedCount } = await products.updateOne(
+      { name, image_url: { $in: ["", null] } },
+      { $set: { image_url: imagePath(name) } }
+    );
+    updated += modifiedCount;
+  }
+  console.log(`Added photos to ${updated} products.`);
+}
+
 async function insertMenu(products) {
   const now = new Date();
   const { insertedCount } = await products.insertMany(
-    MENU.map(([name, category, price, image_url = ""]) => ({
+    MENU.map(([name, category, price]) => ({
       name,
       description: "",
       ingredients: "",
       category,
       price,
-      image_url,
+      image_url: imagePath(name),
       in_stock: true,
       featured: false,
       created_at: now,

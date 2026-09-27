@@ -4,7 +4,7 @@ import { useRef, useEffect } from "react";
 import { gsap } from "gsap";
 import { SplitText } from "gsap/SplitText";
 import { IMAGES } from "@/constants/images";
-import Image from "next/image";
+import { getImageProps } from "next/image";
 import ScrollLink from "@/components/ScrollLink";
 import SiteMenu from "@/components/SiteMenu";
 
@@ -41,21 +41,35 @@ export default function HeroSection() {
     return () => ctx.revert();
   }, []);
 
+  // Art direction: the landscape photo on landscape screens, a portrait crop on phones.
+  const common = { alt: "Freshly baked breads and pastries", sizes: "100vw", quality: 90 };
+  const {
+    props: { srcSet: landscapeSrcSet },
+  } = getImageProps({ ...common, src: IMAGES.heroDesktop });
+  const {
+    props: { srcSet: portraitSrcSet, ...imgProps },
+  } = getImageProps({ ...common, src: IMAGES.heroMobile });
+
   return (
     <section
       ref={sectionRef}
       className="relative h-screen w-full overflow-hidden bg-stone-900"
     >
-      <Image
-        src={IMAGES.hero}
-        alt="Freshly baked goods"
-        fill
-        priority
-        className="object-cover object-center"
-        onError={() => {}}
-      />
-      <div className="absolute inset-0 bg-black/40" />
-      <div className="absolute inset-0 bg-linear-to-t from-black/95 via-black/20 to-transparent" />
+      <picture>
+        <source media="(orientation: landscape)" srcSet={landscapeSrcSet} />
+        <img
+          {...imgProps}
+          srcSet={portraitSrcSet}
+          alt={common.alt}
+          loading="eager"
+          fetchPriority="high"
+          className="absolute inset-0 h-full w-full object-cover object-center"
+        />
+      </picture>
+      {/* Soft scrims only where text sits, so the photo shows at full brightness */}
+      <div className="absolute inset-x-0 top-0 h-40 bg-linear-to-b from-black/60 to-transparent" />
+      {/* Phones get a stronger scrim: the headline covers more of the photo there */}
+      <div className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-black/90 via-black/55 to-transparent md:from-black/85 md:via-black/35" />
 
       <div className="relative z-10 flex h-full flex-col px-5 py-5 md:px-12 md:py-9">
 

@@ -21,11 +21,13 @@ export default function AboutPage() {
         {/* Banner */}
         <div className="relative h-[40vh] min-h-64 w-full overflow-hidden bg-stone-900">
           <Image
-            src={IMAGES.hero}
-            alt="Freshly baked goods"
+            src={IMAGES.heroDesktop}
+            alt="Freshly baked breads and pastries"
             fill
-            priority
-            className="object-cover object-center opacity-80"
+            preload
+            quality={90}
+            placeholder="blur"
+            className="object-cover object-center opacity-90"
             sizes="100vw"
           />
         </div>

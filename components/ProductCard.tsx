@@ -2,6 +2,7 @@ import Image from "next/image";
 import type { ReactNode } from "react";
 import { Product } from "@/types";
 import { CURRENCY_SYMBOL } from "@/constants";
+import { productImage } from "@/lib/images";
 
 interface ProductCardProps {
   product: Product;
@@ -12,24 +13,21 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, badge, action }: ProductCardProps) {
+  const src = productImage(product);
+
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-md transition-shadow hover:shadow-lg">
       {/* Product image */}
       <div className="relative h-56 w-full">
-        {product.image_url ? (
-          <Image
-            src={product.image_url}
-            alt={product.name}
-            fill
-            className="object-cover"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          />
-        ) : (
-          // Placeholder until the client supplies product photos
-          <div className="flex h-full w-full items-center justify-center bg-[#F5EFE6] font-serif italic text-stone-400">
-            {product.category}
-          </div>
-        )}
+        <Image
+          src={src}
+          alt={product.name}
+          fill
+          className="object-cover"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          // Local photos come with a tiny blurred preview; pasted URLs don't.
+          placeholder={typeof src === "string" ? "empty" : "blur"}
+        />
         {badge && (
           <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 font-sans text-xs font-semibold text-stone-800 shadow-sm">
             {badge}

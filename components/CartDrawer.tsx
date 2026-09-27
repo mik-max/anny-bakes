@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { useCartStore, CartItem } from "@/store/cart";
 import { cn } from "@/lib/utils";
 import { CURRENCY_SYMBOL } from "@/constants";
+import { productImage } from "@/lib/images";
 
 export default function CartDrawer() {
   const pathname = usePathname();
@@ -133,15 +134,13 @@ function CartLineItem({
     <li className="flex gap-4 py-4">
       {/* Thumbnail */}
       <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl bg-[#F5EFE6]">
-        {item.product.image_url && (
-          <Image
-            src={item.product.image_url}
-            alt={item.product.name}
-            fill
-            className="object-cover"
-            sizes="64px"
-          />
-        )}
+        <Image
+          src={productImage(item.product)}
+          alt={item.product.name}
+          fill
+          className="object-cover"
+          sizes="64px"
+        />
       </div>
 
       {/* Details */}
