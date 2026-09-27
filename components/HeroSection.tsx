@@ -6,6 +6,7 @@ import { SplitText } from "gsap/SplitText";
 import { IMAGES } from "@/constants/images";
 import Image from "next/image";
 import ScrollLink from "@/components/ScrollLink";
+import SiteMenu from "@/components/SiteMenu";
 
 gsap.registerPlugin(SplitText);
 
@@ -61,13 +62,7 @@ export default function HeroSection() {
         {/* Nav */}
         <nav className="hero-nav flex items-center justify-between">
           {/* Left: hamburger */}
-          <button
-            aria-label="Open menu"
-            className="flex items-center gap-2.5 text-white/90 transition-colors hover:text-white"
-          >
-            <HamburgerIcon />
-            <span className="hidden font-sans text-sm uppercase tracking-widest sm:inline">Menu</span>
-          </button>
+          <SiteMenu className="text-white/90 hover:text-white" />
 
           {/* Centre: brand */}
           <span className="select-none font-serif text-2xl font-normal tracking-wide text-white md:text-[1.75rem]">
@@ -121,15 +116,5 @@ export default function HeroSection() {
         </div>
       </div>
     </section>
-  );
-}
-
-function HamburgerIcon() {
-  return (
-    <svg width="22" height="16" viewBox="0 0 22 16" fill="none" aria-hidden="true">
-      <line x1="0" y1="1" x2="22" y2="1" stroke="currentColor" strokeWidth="1.5" />
-      <line x1="0" y1="8" x2="22" y2="8" stroke="currentColor" strokeWidth="1.5" />
-      <line x1="0" y1="15" x2="22" y2="15" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
   );
 }

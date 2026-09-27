@@ -33,6 +33,12 @@ export default function Footer() {
               Weekly Drop
             </ScrollLink>
             <Link
+              href="/about"
+              className="text-left font-sans text-sm text-stone-400 transition-colors hover:text-white"
+            >
+              About
+            </Link>
+            <Link
               href="/menu"
               className="text-left font-sans text-sm text-stone-400 transition-colors hover:text-white"
             >

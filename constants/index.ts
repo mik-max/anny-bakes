@@ -6,6 +6,15 @@ export const BAKERY_TIMEZONE = "America/Toronto";
 export const DEFAULT_PICKUP_WINDOW = "3–5pm";
 // Shown in confirmation emails. TODO: get the pickup address from the client.
 export const PICKUP_ADDRESS = "";
+
+// Contact + social links for the site menu. Anything left empty is hidden.
+// TODO: get the contact email and social handles from the client.
+export const CONTACT_EMAIL = "";
+export const SOCIAL_LINKS = {
+  instagram: "",
+  tiktok: "",
+  youtube: "",
+} as const;
 export const CURRENCY_SYMBOL = "$";
 
 export const ORDER_STATUSES = [

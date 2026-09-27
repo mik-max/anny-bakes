@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { ImageIcon, X } from "lucide-react";
 import { Product } from "@/types";
 import { CURRENCY_SYMBOL, PRODUCT_CATEGORIES } from "@/constants";
 import type { ProductCategory, ProductInput } from "@/types";
@@ -106,7 +107,7 @@ export default function ProductsManager({ products }: { products: Product[] }) {
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center text-stone-300">
-                    <ImagePlaceholderIcon />
+                    <ImageIcon size={20} strokeWidth={1.5} />
                   </div>
                 )}
               </div>
@@ -203,7 +204,7 @@ export default function ProductsManager({ products }: { products: Product[] }) {
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center text-stone-300">
-                          <ImagePlaceholderIcon />
+                          <ImageIcon size={20} strokeWidth={1.5} />
                         </div>
                       )}
                     </div>
@@ -344,7 +345,7 @@ function ProductModal({
               aria-label="Close"
               className="flex h-7 w-7 items-center justify-center rounded-full text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-700"
             >
-              <CloseIcon />
+              <X size={14} strokeWidth={2} />
             </button>
           </div>
 
@@ -500,24 +501,5 @@ function ProductModal({
         </div>
       </div>
     </>
-  );
-}
-
-function ImagePlaceholderIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <circle cx="8.5" cy="8.5" r="1.5" />
-      <polyline points="21 15 16 10 5 21" />
-    </svg>
-  );
-}
-
-function CloseIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
   );
 }

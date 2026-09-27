@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { ShoppingBag, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useCartStore, CartItem } from "@/store/cart";
 import { cn } from "@/lib/utils";
@@ -35,7 +36,7 @@ export default function CartDrawer() {
           totalItems === 0 && "px-3.5"
         )}
       >
-        <BagIcon />
+        <ShoppingBag size={20} strokeWidth={1.75} />
         {totalItems > 0 && (
           <span className="font-sans text-sm font-medium">
             {totalItems} · {CURRENCY_SYMBOL}{(subtotal / 100).toFixed(2)}
@@ -67,14 +68,14 @@ export default function CartDrawer() {
             aria-label="Close cart"
             className="flex h-8 w-8 items-center justify-center rounded-full text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-700"
           >
-            <CloseIcon />
+            <X size={16} strokeWidth={2} />
           </button>
         </div>
 
         {/* Empty state */}
         {items.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
-            <BagIcon size={48} className="text-stone-200" />
+            <ShoppingBag size={48} strokeWidth={1.75} className="text-stone-200" />
             <p className="font-serif italic text-xl text-stone-600">Your cart is empty</p>
             <p className="font-sans text-sm text-stone-400">
               Add something delicious to get started.
@@ -154,7 +155,7 @@ function CartLineItem({
             aria-label={`Remove ${item.product.name}`}
             className="flex-shrink-0 text-stone-300 transition-colors hover:text-stone-600"
           >
-            <CloseIcon size={14} />
+            <X size={14} strokeWidth={2} />
           </button>
         </div>
 
@@ -188,41 +189,5 @@ function CartLineItem({
         </div>
       </div>
     </li>
-  );
-}
-
-function BagIcon({ size = 20, className }: { size?: number; className?: string }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      aria-hidden="true"
-      className={className}
-    >
-      <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-      <line x1="3" x2="21" y1="6" y2="6" />
-      <path d="M16 10a4 4 0 0 1-8 0" />
-    </svg>
-  );
-}
-
-function CloseIcon({ size = 16 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      aria-hidden="true"
-    >
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
   );
 }

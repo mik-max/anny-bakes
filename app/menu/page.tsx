@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { getAllProducts } from "@/backend/products";
 import { getStorefrontDrop } from "@/backend/drops";
 import { PRODUCT_CATEGORIES } from "@/constants";
 import ProductCard from "@/components/ProductCard";
+import PageHeader from "@/components/PageHeader";
 import ScrollLink from "@/components/ScrollLink";
 import Footer from "@/components/Footer";
 
@@ -29,17 +29,7 @@ export default async function MenuPage() {
 
   return (
     <>
-      <header className="flex items-center justify-between bg-stone-900 px-5 py-5 md:px-12">
-        <Link href="/" className="font-serif text-2xl text-white md:text-[1.75rem]">
-          Anny Bakes
-        </Link>
-        <ScrollLink
-          targetId="weekly-drop"
-          className="font-sans text-sm text-white/90 transition-colors hover:text-white"
-        >
-          Order Weekly Drop <span aria-hidden>→</span>
-        </ScrollLink>
-      </header>
+      <PageHeader />
 
       <main className="bg-[#FAF6F0] px-6 py-16 md:py-24">
         <div className="mx-auto max-w-5xl">
