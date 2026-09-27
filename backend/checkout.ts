@@ -1,6 +1,7 @@
 import "server-only";
 import type Stripe from "stripe";
 import { getStripe } from "@/backend/stripe";
+import { sendOrderPaidEmails } from "@/backend/order-emails";
 import { getDropById, releaseUnits, reserveUnits, type UnitRequest } from "@/backend/drops";
 import { getProductsByIds } from "@/backend/products";
 import {
@@ -181,8 +182,10 @@ export async function handleCheckoutCompleted(session: Stripe.Checkout.Session):
     typeof session.payment_intent === "string"
       ? session.payment_intent
       : (session.payment_intent?.id ?? null);
-  await markOrderPaid(orderId, paymentIntent);
-  // TODO (next step): send confirmation + new-order emails when this returns true.
+  // Only the first delivery of this event sends emails; retries and duplicates don't.
+  if (!(await markOrderPaid(orderId, paymentIntent))) return;
+  const order = await getOrderById(orderId);
+  if (order) await sendOrderPaidEmails(order);
 }
 
 export async function handleCheckoutExpired(session: Stripe.Checkout.Session): Promise<void> {
