@@ -1,3 +1,5 @@
+import { PRODUCT_CATEGORIES } from "@/constants";
+
 export type FulfilmentMethod = "pickup" | "delivery";
 
 export type OrderStatus =
@@ -9,15 +11,21 @@ export type OrderStatus =
   | "cancelled"
   | "refunded";
 
+export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number];
+
 export interface Product {
   id: string;
   name: string;
   description: string;
+  category: ProductCategory;
   price: number; // cents (USD)
   image_url: string;
   in_stock: boolean;
   created_at: string;
 }
+
+/** Fields an admin can set when creating or editing a product. */
+export type ProductInput = Omit<Product, "id" | "created_at">;
 
 export interface OrderItem {
   id: string;

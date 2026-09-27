@@ -1,8 +1,11 @@
 import Link from "next/link";
-import { signOut } from "@/app/(auth)/sign-in/actions";
+import { ClerkProvider, SignOutButton } from "@clerk/nextjs";
 
+// ClerkProvider lives here and in (auth) rather than the root layout,
+// so the public storefront doesn't load Clerk's client script.
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
+    <ClerkProvider signInUrl="/sign-in">
     <div className="flex min-h-screen bg-stone-50">
 
       {/* ── Sidebar ── */}
@@ -30,15 +33,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <StoreIcon />
             View Store
           </Link>
-          <form action={signOut}>
+          <SignOutButton redirectUrl="/sign-in">
             <button
-              type="submit"
+              type="button"
               className="flex w-full items-center gap-3 rounded-lg px-3 py-2 font-sans text-sm text-stone-500 transition-colors hover:bg-stone-50 hover:text-stone-900"
             >
               <SignOutIcon />
               Sign Out
             </button>
-          </form>
+          </SignOutButton>
         </div>
       </aside>
 
@@ -58,6 +61,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </main>
     </div>
+    </ClerkProvider>
   );
 }
 

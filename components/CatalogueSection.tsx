@@ -3,14 +3,13 @@
 import { useRef, useEffect } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { getAllProducts } from "@/data/products";
+import type { Product } from "@/types";
 import ProductCard from "@/components/ProductCard";
 import TextReveal from "@/components/TextReveal";
 
 gsap.registerPlugin(ScrollTrigger);
 
-export default function CatalogueSection() {
-  const products = getAllProducts();
+export default function CatalogueSection({ products }: { products: Product[] }) {
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {

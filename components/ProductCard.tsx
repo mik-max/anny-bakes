@@ -25,13 +25,20 @@ export default function ProductCard({ product, elevated }: ProductCardProps) {
     >
       {/* Product image */}
       <div className="relative h-56 w-full">
-        <Image
-          src={product.image_url}
-          alt={product.name}
-          fill
-          className="object-cover"
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-        />
+        {product.image_url ? (
+          <Image
+            src={product.image_url}
+            alt={product.name}
+            fill
+            className="object-cover"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          />
+        ) : (
+          // Placeholder until the client supplies product photos
+          <div className="flex h-full w-full items-center justify-center bg-[#F5EFE6] font-serif italic text-stone-400">
+            {product.category}
+          </div>
+        )}
       </div>
 
       {/* Card body */}

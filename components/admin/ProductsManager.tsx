@@ -4,12 +4,12 @@ import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Product } from "@/types";
-import { CURRENCY_SYMBOL } from "@/constants";
+import { CURRENCY_SYMBOL, PRODUCT_CATEGORIES } from "@/constants";
+import type { ProductCategory, ProductInput } from "@/types";
 import {
   createProductAction,
   updateProductAction,
   deleteProductAction,
-  ProductInput,
 } from "@/app/(dashboard)/admin/actions";
 
 function formatCents(cents: number) {
@@ -307,6 +307,7 @@ function ProductModal({
     const input: ProductInput = {
       name: (fd.get("name") as string).trim(),
       description: (fd.get("description") as string).trim(),
+      category: fd.get("category") as ProductCategory,
       price: Math.round(priceRaw * 100),
       image_url: (fd.get("image_url") as string).trim(),
       in_stock: fd.get("in_stock") === "on",
@@ -358,16 +359,37 @@ function ProductModal({
             {/* Description */}
             <div className="space-y-1.5">
               <label className="block font-sans text-xs font-semibold uppercase tracking-wide text-stone-500">
-                Description <span className="text-red-400">*</span>
+                Description
               </label>
               <textarea
                 name="description"
-                required
                 rows={3}
                 defaultValue={product?.description ?? ""}
                 placeholder="Short description shown on the menu"
                 className="w-full resize-none rounded-lg border border-stone-200 px-3 py-2.5 font-sans text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-900/20"
               />
+            </div>
+
+            {/* Category */}
+            <div className="space-y-1.5">
+              <label className="block font-sans text-xs font-semibold uppercase tracking-wide text-stone-500">
+                Category <span className="text-red-400">*</span>
+              </label>
+              <select
+                name="category"
+                required
+                defaultValue={product?.category ?? ""}
+                className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2.5 font-sans text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/20"
+              >
+                <option value="" disabled>
+                  Select a category
+                </option>
+                {PRODUCT_CATEGORIES.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Price + Image URL */}

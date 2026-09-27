@@ -3,15 +3,14 @@
 import { useRef, useEffect } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { getAllProducts } from "@/data/products";
+import type { Product } from "@/types";
 import ProductCard from "@/components/ProductCard";
 import ScrollLink from "@/components/ScrollLink";
 import TextReveal from "@/components/TextReveal";
 
 gsap.registerPlugin(ScrollTrigger);
 
-export default function FeaturedSection() {
-  const featured = getAllProducts().slice(0, 3);
+export default function FeaturedSection({ products }: { products: Product[] }) {
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -73,7 +72,7 @@ export default function FeaturedSection() {
 
       {/* Cards */}
       <div className="mx-auto flex max-w-5xl flex-col gap-6 md:flex-row md:items-start">
-        {featured.map((product, index) => (
+        {products.map((product, index) => (
           <div key={product.id} className="fs-card flex-1">
             <ProductCard product={product} elevated={index === 1} />
           </div>

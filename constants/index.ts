@@ -13,3 +13,17 @@ export const ORDER_STATUSES = [
   "cancelled",
   "refunded",
 ] as const;
+
+// Menu sections, in display order.
+export const PRODUCT_CATEGORIES = [
+  "Sourdough",
+  "Focaccia",
+  "Babka",
+  "Muffins",
+  "Bread",
+  "Buns",
+  "Croissants",
+  "Donuts",
+  "Cakes",
+  "Cookies",
+] as const;

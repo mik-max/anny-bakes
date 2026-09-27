@@ -59,6 +59,7 @@ app/
   (auth)/
   (dashboard)/
   api/
+backend/       # server-only business logic + database access
 components/
   ui/          # shadcn components
 constants/
@@ -68,8 +69,10 @@ lib/           # utils, api clients, cn.ts
 store/         # Zustand stores (if needed)
 types/
 public/        # static assets
+scripts/       # one-off scripts (e.g. database seeding)
 
 - app/ → routes and page components only. Pages compose UI components and call hooks/server actions.
+- backend/ → all business logic and database access (MongoDB). Every file starts with `import "server-only"`. Server actions and route handlers in app/ stay thin: check auth, validate input, call backend/.
 - components/ → reusable UI. Create when reused, improves readability, or represents a clear concept (Button, Card, Modal, etc.). Do not create too early.
 - data/ → hardcoded or static content (typed).
 - store/ → Zustand stores. Persist with localStorage when needed.
