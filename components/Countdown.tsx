@@ -24,10 +24,10 @@ export default function Countdown({ target, label }: { target: string; label: st
 
   const total = remainingMs ?? 0;
   const parts = [
-    { unit: "Days", value: Math.floor(total / 86_400_000) },
-    { unit: "Hours", value: Math.floor(total / 3_600_000) % 24 },
-    { unit: "Mins", value: Math.floor(total / 60_000) % 60 },
-    { unit: "Secs", value: Math.floor(total / 1_000) % 60 },
+    { unit: "Day", value: Math.floor(total / 86_400_000) },
+    { unit: "Hour", value: Math.floor(total / 3_600_000) % 24 },
+    { unit: "Min", value: Math.floor(total / 60_000) % 60 },
+    { unit: "Sec", value: Math.floor(total / 1_000) % 60 },
   ];
 
   return (
@@ -42,7 +42,8 @@ export default function Countdown({ target, label }: { target: string; label: st
               {remainingMs === null ? "–" : String(value).padStart(2, "0")}
             </p>
             <p className="mt-0.5 font-sans text-[10px] uppercase tracking-widest text-stone-400">
-              {unit}
+              {/* "1 Day", but "0 Days" / "2 Days" */}
+              {value === 1 ? unit : `${unit}s`}
             </p>
           </div>
         ))}
