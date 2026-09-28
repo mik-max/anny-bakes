@@ -155,13 +155,29 @@ export default function CheckoutForm({ pickup }: { pickup: CheckoutPickup | null
           </div>
         </FormSection>
 
-        {/* Pickup */}
-        <FormSection title="Pickup">
-          <p className="font-sans text-sm text-stone-700">
-            <span className="font-semibold text-stone-900">
-              {formatPickupDate(pickup.pickupDate)}, {pickup.pickupWindow}
-            </span>
-          </p>
+        {/* Fulfilment — pickup only for now; delivery is shown as coming soon */}
+        <FormSection title="Pickup or Delivery">
+          <div role="radiogroup" aria-label="Fulfilment method" className="grid grid-cols-2 gap-3">
+            <div
+              role="radio"
+              aria-checked="true"
+              className="rounded-xl border-2 border-stone-900 bg-stone-900 px-4 py-3 text-white"
+            >
+              <p className="font-sans text-sm font-semibold">Pickup</p>
+              <p className="mt-0.5 font-sans text-xs text-white/70">
+                {formatPickupDate(pickup.pickupDate)}, {pickup.pickupWindow}
+              </p>
+            </div>
+            <div
+              role="radio"
+              aria-checked="false"
+              aria-disabled="true"
+              className="cursor-not-allowed rounded-xl border-2 border-dashed border-stone-200 px-4 py-3 text-stone-400"
+            >
+              <p className="font-sans text-sm font-semibold">Delivery</p>
+              <p className="mt-0.5 font-sans text-xs">Coming soon</p>
+            </div>
+          </div>
           <p className="font-sans text-sm text-stone-500">
             Orders are baked fresh for pickup. We&apos;ll email your confirmation with the
             pickup details.

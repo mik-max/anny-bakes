@@ -10,6 +10,8 @@ Answers from the pre-launch questionnaire (received 27 Sep 2026). Target launch:
 | Database | **MongoDB.** Build against our test MongoDB; switch to the client's production database later. |
 | Statement descriptor | `ANNY BAKES` |
 | Payment | Pay **in full** at checkout (Stripe Checkout). |
+| Sales tax | **None for now** (confirmed 28 Sep 2026). Prices are charged as listed. |
+| Fulfilment | **Pickup only for now.** Checkout shows Delivery greyed out as "Coming soon" (confirmed 28 Sep 2026). |
 | Timezone | Client said "Canadian time zone GMT+4". This is ambiguous; see *Needs clarification*. |
 | Stock limits | Configurable count per item, per weekly drop. |
 | Weekly drop model | Admin creates a weekly drop, adds products from the inventory (full catalogue), and sets a count for each item. **Only one drop can be active at a time.** |
@@ -32,9 +34,7 @@ Answers from the pre-launch questionnaire (received 27 Sep 2026). Target launch:
 - Web address (domain)
 - Customer contact email
 - Email address for new-order alerts
-- Sales tax: required? prices tax-inclusive?
 - Pickup address
-- Pickup only, or delivery as well
 - Cancellation / refund policy
 - Policy for uncollected orders
 - Privacy policy and disclaimer wording (in progress)
