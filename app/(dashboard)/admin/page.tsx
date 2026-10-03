@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getAllOrders } from "@/backend/orders";
+import { expireOverdueEtransfers, getAllOrders } from "@/backend/orders";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { CURRENCY_SYMBOL } from "@/constants";
 import { Order } from "@/types";
@@ -34,6 +34,7 @@ export default async function AdminOrdersPage({
   searchParams: Promise<{ status?: string }>;
 }) {
   const { status = "all" } = await searchParams;
+  await expireOverdueEtransfers(); // unpaid e-Transfers past their deadline drop out of "Pending"
   const orders = await getAllOrders();
 
   // getAllOrders returns newest first
@@ -128,7 +129,7 @@ export default async function AdminOrdersPage({
                       </span>
                     </td>
                     <td className="px-4 py-3.5">
-                      <OrderStatusBadge status={order.status} />
+                      <OrderStatusBadge status={order.status} paymentMethod={order.payment_method} />
                     </td>
                     <td className="hidden px-4 py-3.5 font-sans text-xs text-stone-400 xl:table-cell">
                       {formatDate(order.created_at)}
@@ -167,7 +168,7 @@ function OrderCard({ order }: { order: Order }) {
         <span className="font-sans text-sm font-semibold text-stone-900">
           {order.order_number}
         </span>
-        <OrderStatusBadge status={order.status} />
+        <OrderStatusBadge status={order.status} paymentMethod={order.payment_method} />
       </div>
 
       {/* Customer name */}

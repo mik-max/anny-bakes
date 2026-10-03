@@ -1,7 +1,7 @@
 import "server-only";
 import { sendEmail } from "@/backend/email";
-import { CURRENCY_SYMBOL, PICKUP_ADDRESS } from "@/constants";
-import { formatPickupDate } from "@/lib/time";
+import { CURRENCY_SYMBOL, ETRANSFER_EMAIL, PICKUP_ADDRESS } from "@/constants";
+import { formatBakeryDateTime, formatPickupDate } from "@/lib/time";
 import type { Order } from "@/types";
 
 // Plain, inline-styled HTML — email clients ignore stylesheets.
@@ -94,9 +94,20 @@ export function customerConfirmationEmail(order: Order) {
 export function bakeryNewOrderEmail(order: Order) {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
   const adminUrl = baseUrl ? `${baseUrl}/admin/orders/${order.id}` : null;
-  const subject = `New order ${order.order_number} — ${money(order.total)} for ${formatPickupDate(order.pickup_date)}`;
+  const awaitingEtransfer = order.payment_method === "etransfer" && order.status === "pending";
+  const paymentLine = awaitingEtransfer
+    ? `Awaiting Interac e-Transfer of ${money(order.total)}${
+        order.payment_due_at ? ` (due ${formatBakeryDateTime(order.payment_due_at)})` : ""
+      }. Mark it received in the admin once it arrives.`
+    : null;
+  const subject = `New ${awaitingEtransfer ? "e-Transfer " : ""}order ${order.order_number} — ${money(order.total)} for ${formatPickupDate(order.pickup_date)}`;
   const html = layout(`
     <h1 style="margin:0 0 16px;font-size:20px;color:#1c1917">New order ${order.order_number}</h1>
+    ${
+      paymentLine
+        ? `<div style="margin:0 0 16px;padding:12px 16px;background:#eff6ff;border-radius:12px;font-size:14px;color:#1e3a8a"><strong>Payment:</strong> ${escapeHtml(paymentLine)}</div>`
+        : ""
+    }
     <p style="margin:0 0 4px;font-size:14px;color:#1c1917"><strong>${escapeHtml(order.customer_name)}</strong></p>
     <p style="margin:0 0 16px;font-size:14px;color:#57534e">${escapeHtml(order.email)} · ${escapeHtml(order.phone)}</p>
     <p style="margin:0 0 16px;font-size:14px;color:#1c1917"><strong>Pickup:</strong> ${escapeHtml(pickupText(order))}</p>
@@ -113,6 +124,7 @@ export function bakeryNewOrderEmail(order: Order) {
     }`);
   const text = [
     `New order ${order.order_number}`,
+    ...(paymentLine ? [`Payment: ${paymentLine}`] : []),
     `${order.customer_name} — ${order.email} · ${order.phone}`,
     `Pickup: ${pickupText(order)}`,
     ...(order.note ? [`Note: ${order.note}`] : []),
@@ -123,24 +135,94 @@ export function bakeryNewOrderEmail(order: Order) {
   return { subject, html, text };
 }
 
-/** Customer receipt + bakery alert. Call once, when an order first becomes paid. */
-export async function sendOrderPaidEmails(order: Order): Promise<void> {
-  const bakeryInbox = process.env.EMAIL_ADMIN;
+/** Sent when an e-Transfer order is placed: how, how much, and by when to pay. */
+export function etransferInstructionsEmail(order: Order, accessToken: string) {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+  const orderUrl = baseUrl
+    ? `${baseUrl}/checkout/etransfer?order=${order.id}&token=${encodeURIComponent(accessToken)}`
+    : null;
+  const due = order.payment_due_at ? formatBakeryDateTime(order.payment_due_at) : null;
+  const subject = `Send your e-Transfer to complete order ${order.order_number}`;
+  const row = (label: string, value: string) =>
+    `<tr><td style="padding:6px 0;color:#78716c">${label}</td><td style="padding:6px 0;color:#1c1917;font-weight:600;text-align:right">${value}</td></tr>`;
+  const html = layout(`
+    <h1 style="margin:0 0 8px;font-size:20px;color:#1c1917">Almost done, ${escapeHtml(order.customer_name)}!</h1>
+    <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#57534e">
+      Your order <strong>${order.order_number}</strong> is reserved. To confirm it, please send an Interac e-Transfer${
+        due ? ` by <strong>${escapeHtml(due)}</strong>` : ""
+      }.
+    </p>
+    <table style="width:100%;border-collapse:collapse;font-size:14px;margin:0 0 20px;padding:16px;background:#faf6f0;border-radius:12px">
+      ${row("Send to", escapeHtml(ETRANSFER_EMAIL))}
+      ${row("Amount", money(order.total))}
+      ${row("Message", order.order_number)}
+    </table>
+    <p style="margin:0 0 20px;font-size:13px;line-height:1.6;color:#78716c">
+      Orders not paid in time are released so others can order. We'll email your confirmation as soon as your payment arrives.
+    </p>
+    ${itemsHtml(order)}
+    <p style="margin:20px 0 0;font-size:14px;color:#1c1917"><strong>Pickup:</strong> ${escapeHtml(pickupText(order))}</p>
+    ${
+      orderUrl
+        ? `<p style="margin:24px 0 0"><a href="${orderUrl}" style="display:inline-block;background:#1c1917;color:#ffffff;padding:10px 18px;border-radius:8px;font-size:14px;text-decoration:none">View your order</a></p>`
+        : ""
+    }`);
+  const text = [
+    `Almost done, ${order.customer_name}!`,
+    `Your order ${order.order_number} is reserved. To confirm it, please send an Interac e-Transfer${due ? ` by ${due}` : ""}:`,
+    "",
+    `Send to: ${ETRANSFER_EMAIL}`,
+    `Amount: ${money(order.total)}`,
+    `Message: ${order.order_number}`,
+    "",
+    "Orders not paid in time are released so others can order.",
+    "",
+    itemsText(order),
+    "",
+    `Pickup: ${pickupText(order)}`,
+    ...(orderUrl ? ["", `View your order: ${orderUrl}`] : []),
+  ].join("\n");
+  return { subject, html, text };
+}
 
+function sendBakeryAlert(order: Order): Promise<void> {
+  const bakeryInbox = process.env.EMAIL_ADMIN;
+  if (!bakeryInbox) {
+    console.info("[email] skipped bakery alert: EMAIL_ADMIN not set");
+    return Promise.resolve();
+  }
+  return sendEmail({
+    to: bakeryInbox,
+    ...bakeryNewOrderEmail(order),
+    replyTo: order.email,
+    idempotencyKey: `order-alert/${order.id}`,
+  });
+}
+
+/** The customer's "your order is confirmed" receipt. */
+export function sendCustomerConfirmation(order: Order): Promise<void> {
+  return sendEmail({
+    to: order.email,
+    ...customerConfirmationEmail(order),
+    replyTo: process.env.EMAIL_ADMIN,
+    idempotencyKey: `order-confirmation/${order.id}`,
+  });
+}
+
+/** e-Transfer order placed: payment instructions to the customer + alert to the bakery. */
+export async function sendEtransferOrderEmails(order: Order, accessToken: string): Promise<void> {
   await Promise.all([
     sendEmail({
       to: order.email,
-      ...customerConfirmationEmail(order),
-      replyTo: bakeryInbox,
-      idempotencyKey: `order-confirmation/${order.id}`,
+      ...etransferInstructionsEmail(order, accessToken),
+      replyTo: process.env.EMAIL_ADMIN,
+      idempotencyKey: `etransfer-instructions/${order.id}`,
     }),
-    bakeryInbox
-      ? sendEmail({
-          to: bakeryInbox,
-          ...bakeryNewOrderEmail(order),
-          replyTo: order.email,
-          idempotencyKey: `order-alert/${order.id}`,
-        })
-      : Promise.resolve(console.info("[email] skipped bakery alert: EMAIL_ADMIN not set")),
+    sendBakeryAlert(order),
   ]);
+}
+
+/** Card order paid: customer receipt + bakery alert. Call once, when it first becomes paid. */
+export async function sendOrderPaidEmails(order: Order): Promise<void> {
+  await Promise.all([sendCustomerConfirmation(order), sendBakeryAlert(order)]);
 }

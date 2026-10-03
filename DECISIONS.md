@@ -9,10 +9,13 @@ Answers from the pre-launch questionnaire (received 27 Sep 2026). Target launch:
 | Hosting | Client handles production hosting. We just need the app working and deployable. |
 | Database | **MongoDB.** Build against our test MongoDB; switch to the client's production database later. |
 | Statement descriptor | `ANNY BAKES` |
-| Payment | Pay **in full** at checkout (Stripe Checkout). |
+| Payment | Pay **in full** at checkout: **card** (Stripe Checkout) or **Interac e-Transfer** (confirmed 3 Oct 2026). |
+| e-Transfer | **Manual for launch:** customer sends to `enjoy@annybakes.com` with the order number; an admin marks it received; unpaid orders expire after 24h. **Automatic later** via a Request Money provider (e.g. VoPay, DCPayments) once the client has a merchant account. The Interac Hub link was identity verification, not payments. |
+| Minimum order | **$22.00** (client's T&Cs), enforced in cart, checkout and server. |
+| Currency | **CAD** (confirmed 3 Oct 2026). Prices unchanged, now in Canadian dollars. |
+| Location / timezone | **Ottawa** (the client's T&Cs cite Ottawa Public Health), so `America/Toronto`, which the site already uses. |
 | Sales tax | **None for now** (confirmed 28 Sep 2026). Prices are charged as listed. |
 | Fulfilment | **Pickup only for now.** Checkout shows Delivery greyed out as "Coming soon" (confirmed 28 Sep 2026). |
-| Timezone | Client said "Canadian time zone GMT+4". This is ambiguous; see *Needs clarification*. |
 | Stock limits | Configurable count per item, per weekly drop. |
 | Weekly drop model | Admin creates a weekly drop, adds products from the inventory (full catalogue), and sets a count for each item. **Only one drop can be active at a time.** |
 | Custom orders | Out of scope for now. |
@@ -42,6 +45,4 @@ Answers from the pre-launch questionnaire (received 27 Sep 2026). Target launch:
 ## Needs clarification
 
 - **Menu size:** the rollout plan lists **28** items, not 30.
-- **Timezone:** no Canadian timezone is GMT+4. The client most likely means UTC−4, which is currently either Eastern Daylight (Toronto) or Atlantic Standard (Halifax). We need the **city** so we can use the correct IANA zone and handle daylight saving. Clocks change on 1 Nov 2026.
-- **Currency:** the codebase uses USD. A Canadian business will probably charge **CAD**.
 - **Order window details** (when orders open, first pickup date, behaviour after the cutoff): these can be set per drop in the admin (opens at / closes at / pickup date), so they no longer block the build.

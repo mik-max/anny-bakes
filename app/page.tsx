@@ -5,11 +5,13 @@ import Footer from "@/components/Footer";
 import { PendingScroll } from "@/components/ScrollLink";
 import { getAllProducts } from "@/backend/products";
 import { getStorefrontDrop } from "@/backend/drops";
+import { expireOverdueEtransfers } from "@/backend/orders";
 
 // Menu and drop come from the database — render per request, not at build time.
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
+  await expireOverdueEtransfers(); // so "X left" includes stock from unpaid, overdue orders
   const [drop, products] = await Promise.all([getStorefrontDrop(), getAllProducts()]);
   const inDropIds = drop?.status === "open" ? drop.items.map((i) => i.product.id) : [];
 

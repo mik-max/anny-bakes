@@ -1,4 +1,4 @@
-import { OrderStatus } from "@/types";
+import { OrderStatus, PaymentMethod } from "@/types";
 import { cn } from "@/lib/utils";
 
 const STATUS_STYLES: Record<OrderStatus, string> = {
@@ -23,15 +23,22 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
   refunded:  "Refunded",
 };
 
-export function OrderStatusBadge({ status }: { status: OrderStatus }) {
+export function OrderStatusBadge({
+  status,
+  paymentMethod,
+}: {
+  status: OrderStatus;
+  paymentMethod?: PaymentMethod;
+}) {
+  const awaitingEtransfer = status === "pending" && paymentMethod === "etransfer";
   return (
     <span
       className={cn(
         "inline-flex items-center rounded-full px-2.5 py-0.5 font-sans text-xs font-semibold",
-        STATUS_STYLES[status]
+        awaitingEtransfer ? "bg-amber-50 text-amber-700" : STATUS_STYLES[status]
       )}
     >
-      {STATUS_LABELS[status]}
+      {awaitingEtransfer ? "Awaiting e-Transfer" : STATUS_LABELS[status]}
     </span>
   );
 }

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import type { OrderStatus, ProductInput } from "@/types";
+import type { OrderStatus, ProductInput, UploadSignature } from "@/types";
 import { PRODUCT_CATEGORIES } from "@/constants";
 import {
   updateProduct,
@@ -9,16 +9,22 @@ import {
   deleteProduct,
 } from "@/backend/products";
 import { requireAdmin } from "@/backend/auth";
+import { isAllowedProductImage, signProductUpload } from "@/backend/cloudinary";
 import { isProductInUpcomingDrop } from "@/backend/drops";
 import { getOrderById, updateOrderStatus as setOrderStatus } from "@/backend/orders";
-import { ADMIN_STATUS_TRANSITIONS } from "@/lib/orders";
+import { confirmEtransferReceived } from "@/backend/checkout";
+import { adminStatusTransitions } from "@/lib/orders";
 
 export async function updateOrderStatus(orderId: string, status: OrderStatus) {
   await requireAdmin();
   const order = await getOrderById(orderId);
   // Ignore stale buttons (e.g. two admins acting on the same order).
-  if (!order || !ADMIN_STATUS_TRANSITIONS[order.status].includes(status)) return;
-  await setOrderStatus(orderId, status);
+  if (!order || !adminStatusTransitions(order).includes(status)) return;
+  if (order.status === "pending" && status === "paid") {
+    await confirmEtransferReceived(orderId); // also emails the customer their confirmation
+  } else {
+    await setOrderStatus(orderId, status);
+  }
   revalidatePath("/admin");
   revalidatePath(`/admin/orders/${orderId}`);
 }
@@ -51,7 +57,19 @@ function parseProduct(
   if (!Number.isInteger(product.price) || product.price <= 0) {
     return { error: "Price must be greater than zero." };
   }
+  if (!isAllowedProductImage(product.image_url)) {
+    return { error: "That photo couldn't be used. Please upload it again." };
+  }
   return { product };
+}
+
+export async function getProductUploadSignature(): Promise<
+  { signature: UploadSignature } | { error: string }
+> {
+  await requireAdmin();
+  const signature = signProductUpload();
+  if (!signature) return { error: "Photo uploads aren't set up yet (Cloudinary keys missing)." };
+  return { signature };
 }
 
 export async function createProductAction(data: ProductInput): Promise<{ error?: string }> {

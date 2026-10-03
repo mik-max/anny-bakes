@@ -2,7 +2,7 @@ import Image from "next/image";
 import type { ReactNode } from "react";
 import { Product } from "@/types";
 import { CURRENCY_SYMBOL } from "@/constants";
-import { productImage } from "@/lib/images";
+import { productImageProps } from "@/lib/images";
 
 interface ProductCardProps {
   product: Product;
@@ -13,20 +13,20 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, badge, action }: ProductCardProps) {
-  const src = productImage(product);
+  const image = productImageProps(product, { width: 800, height: 600 });
 
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-md transition-shadow hover:shadow-lg">
       {/* Product image */}
       <div className="relative h-56 w-full">
         <Image
-          src={src}
+          {...image}
           alt={product.name}
           fill
           className="object-cover"
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          // Local photos come with a tiny blurred preview; pasted URLs don't.
-          placeholder={typeof src === "string" ? "empty" : "blur"}
+          // Bundled category photos come with a tiny blurred preview; uploaded ones don't.
+          placeholder={typeof image.src === "string" ? "empty" : "blur"}
         />
         {badge && (
           <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 font-sans text-xs font-semibold text-stone-800 shadow-sm">

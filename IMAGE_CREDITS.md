@@ -5,7 +5,7 @@ All are free under the [Unsplash License](https://unsplash.com/license): commerc
 
 **To replace a photo:** overwrite the file at the same path (keep the name).
 
-**Adding a product later:** find a free photo on Unsplash, save it as `public/images/products/<product-name>.jpg` (lowercase, dashes, no apostrophes), set that path as the product's image in the admin, and add a row below. Until a product has a photo, it shows its category photo.
+**Adding a product later:** upload its photo in the admin (Products → Add/Edit → Upload photo). Uploaded photos are stored in Cloudinary, not in this repo. Until a product has a photo, it shows its category photo.
 
 ## Site photos
 

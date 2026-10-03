@@ -4,10 +4,20 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useCartStore } from "@/store/cart";
 import { cn } from "@/lib/utils";
-import { CURRENCY_SYMBOL } from "@/constants";
+import {
+  CURRENCY_SYMBOL,
+  ETRANSFER_EMAIL,
+  ETRANSFER_PAYMENT_HOURS,
+  MIN_ORDER_CENTS,
+} from "@/constants";
 import { formatPickupDate } from "@/lib/time";
 import { PENDING_CHECKOUT_KEY } from "@/lib/checkout";
-import { cancelCheckout, createCheckoutSession } from "@/app/checkout/actions";
+import {
+  cancelCheckout,
+  createCheckoutSession,
+  placeEtransferOrderAction,
+} from "@/app/checkout/actions";
+import type { PaymentMethod } from "@/types";
 
 export interface CheckoutPickup {
   dropId: string;
@@ -34,8 +44,10 @@ export default function CheckoutForm({ pickup }: { pickup: CheckoutPickup | null
   const [form, setForm] = useState<FormState>(empty);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
 
   const subtotal = subtotalCents();
+  const belowMinimum = subtotal < MIN_ORDER_CENTS;
   const cartMatchesDrop = pickup !== null && dropId === pickup.dropId;
 
   // Back from Stripe without paying? Cancel that session so its stock is freed now.
@@ -67,14 +79,27 @@ export default function CheckoutForm({ pickup }: { pickup: CheckoutPickup | null
     setLoading(true);
     setError(null);
 
-    const result = await createCheckoutSession({
+    const input = {
       customerName: form.customerName,
       email: form.email,
       phone: form.phone,
       note: form.note || undefined,
       dropId: pickup.dropId,
       items: items.map((i) => ({ productId: i.product.id, quantity: i.quantity })),
-    });
+    };
+
+    if (paymentMethod === "etransfer") {
+      const placed = await placeEtransferOrderAction(input);
+      if (placed.error !== undefined) {
+        setError(placed.error);
+        setLoading(false);
+        return;
+      }
+      window.location.href = placed.url; // instructions page clears the cart
+      return;
+    }
+
+    const result = await createCheckoutSession(input);
 
     if (result.error !== undefined) {
       setError(result.error);
@@ -184,6 +209,50 @@ export default function CheckoutForm({ pickup }: { pickup: CheckoutPickup | null
           </p>
         </FormSection>
 
+        {/* Payment */}
+        <FormSection title="Payment">
+          <div role="radiogroup" aria-label="Payment method" className="grid grid-cols-2 gap-3">
+            {(
+              [
+                ["card", "Card", "Visa, Mastercard, Apple Pay, Google Pay"],
+                ["etransfer", "Interac e-Transfer", "Send from your bank"],
+              ] as const
+            ).map(([value, label, hint]) => (
+              <button
+                key={value}
+                type="button"
+                role="radio"
+                aria-checked={paymentMethod === value}
+                onClick={() => setPaymentMethod(value)}
+                className={cn(
+                  "rounded-xl border-2 px-4 py-3 text-left transition-colors",
+                  paymentMethod === value
+                    ? "border-stone-900 bg-stone-900 text-white"
+                    : "border-stone-200 text-stone-700 hover:border-stone-400"
+                )}
+              >
+                <p className="font-sans text-sm font-semibold">{label}</p>
+                <p
+                  className={cn(
+                    "mt-0.5 font-sans text-xs",
+                    paymentMethod === value ? "text-white/70" : "text-stone-400"
+                  )}
+                >
+                  {hint}
+                </p>
+              </button>
+            ))}
+          </div>
+          {paymentMethod === "etransfer" && (
+            <p className="font-sans text-sm text-stone-500">
+              After you place your order, send an Interac e-Transfer to{" "}
+              <span className="font-semibold text-stone-900">{ETRANSFER_EMAIL}</span> within{" "}
+              {ETRANSFER_PAYMENT_HOURS} hours. We&apos;ll show you the details next and email them
+              to you. Unpaid orders are released.
+            </p>
+          )}
+        </FormSection>
+
         {/* Order note */}
         <FormSection title="Order Note">
           <Field label="Any special requests? (optional)">
@@ -222,12 +291,24 @@ export default function CheckoutForm({ pickup }: { pickup: CheckoutPickup | null
           <SummaryRow label="Subtotal" value={`${CURRENCY_SYMBOL}${(subtotal / 100).toFixed(2)}`} />
           <SummaryRow label="Pickup" value={formatPickupDate(pickup.pickupDate)} />
           <div className="flex justify-between border-t border-stone-100 pt-3">
-            <span className="font-sans font-semibold text-stone-900">Total</span>
+            <span className="font-sans font-semibold text-stone-900">Total (CAD)</span>
             <span className="font-sans font-semibold text-stone-900">
               {CURRENCY_SYMBOL}{(subtotal / 100).toFixed(2)}
             </span>
           </div>
         </div>
+
+        {belowMinimum && (
+          <p className="mt-4 font-sans text-sm text-amber-700">
+            The minimum order is {CURRENCY_SYMBOL}
+            {(MIN_ORDER_CENTS / 100).toFixed(2)}. Add {CURRENCY_SYMBOL}
+            {((MIN_ORDER_CENTS - subtotal) / 100).toFixed(2)} more from the{" "}
+            <Link href="/" className="font-semibold underline underline-offset-2">
+              weekly drop
+            </Link>
+            .
+          </p>
+        )}
 
         {error && (
           <p className="mt-4 font-sans text-sm text-red-500">{error}</p>
@@ -235,14 +316,22 @@ export default function CheckoutForm({ pickup }: { pickup: CheckoutPickup | null
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || belowMinimum}
           className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-stone-900 py-4 font-sans text-sm font-semibold text-white transition-colors hover:bg-stone-700 disabled:opacity-60"
         >
-          {loading ? "Redirecting to payment…" : "Continue to Payment →"}
+          {paymentMethod === "etransfer"
+            ? loading
+              ? "Placing order…"
+              : "Place Order →"
+            : loading
+              ? "Redirecting to payment…"
+              : "Continue to Payment →"}
         </button>
 
         <p className="mt-3 text-center font-sans text-xs text-stone-400">
-          Secure payment powered by Stripe
+          {paymentMethod === "etransfer"
+            ? "Pay by Interac e-Transfer from your bank"
+            : "Secure payment powered by Stripe"}
         </p>
         <p className="mt-1 text-center font-sans text-xs text-stone-400">
           By ordering you agree to our{" "}

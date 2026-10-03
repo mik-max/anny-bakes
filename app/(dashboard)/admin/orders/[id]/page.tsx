@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getOrderById } from "@/backend/orders";
+import { expireOverdueEtransfers, getOrderById } from "@/backend/orders";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { updateOrderStatus } from "@/app/(dashboard)/admin/actions";
 import { CURRENCY_SYMBOL } from "@/constants";
 import { OrderStatus } from "@/types";
-import { ADMIN_STATUS_TRANSITIONS } from "@/lib/orders";
-import { formatPickupDate } from "@/lib/time";
+import { adminStatusTransitions } from "@/lib/orders";
+import { formatBakeryDateTime, formatPickupDate } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
 
@@ -37,10 +37,12 @@ export default async function OrderDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  await expireOverdueEtransfers();
   const order = await getOrderById(id);
   if (!order) notFound();
 
-  const nextStatuses = ADMIN_STATUS_TRANSITIONS[order.status];
+  const nextStatuses = adminStatusTransitions(order);
+  const awaitingEtransfer = order.status === "pending" && order.payment_method === "etransfer";
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -62,7 +64,7 @@ export default async function OrderDetailPage({
             Placed {formatDateLong(order.created_at)}
           </p>
         </div>
-        <OrderStatusBadge status={order.status} />
+        <OrderStatusBadge status={order.status} paymentMethod={order.payment_method} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -134,13 +136,20 @@ export default async function OrderDetailPage({
                             : "bg-stone-900 text-white hover:bg-stone-700"
                         }`}
                       >
-                        {STATUS_BUTTON_LABELS[next] ?? next}
+                        {next === "paid" ? "Mark e-Transfer received" : (STATUS_BUTTON_LABELS[next] ?? next)}
                       </button>
                     </form>
                   );
                 })}
               </div>
-              {nextStatuses.includes("cancelled") && (
+              {awaitingEtransfer && (
+                <p className="mt-3 font-sans text-xs text-stone-500">
+                  Check your bank for an e-Transfer of the order total with{" "}
+                  <span className="font-semibold">{order.order_number}</span> in the message, then
+                  mark it received — the customer gets their confirmation email.
+                </p>
+              )}
+              {nextStatuses.includes("cancelled") && !awaitingEtransfer && (
                 <p className="mt-3 font-sans text-xs text-stone-400">
                   Cancelling returns the items to the drop but doesn&apos;t refund the
                   customer — issue refunds from the Stripe dashboard.
@@ -176,16 +185,24 @@ export default async function OrderDetailPage({
             )}
           </section>
 
-          {order.stripe_payment_intent && (
-            <section className="rounded-xl border border-stone-100 bg-white px-5 py-4">
-              <p className="mb-3 font-sans text-xs font-semibold uppercase tracking-wide text-stone-400">
-                Payment
+          <section className="rounded-xl border border-stone-100 bg-white px-5 py-4">
+            <p className="mb-3 font-sans text-xs font-semibold uppercase tracking-wide text-stone-400">
+              Payment
+            </p>
+            <p className="font-sans text-sm font-semibold text-stone-900">
+              {order.payment_method === "etransfer" ? "Interac e-Transfer" : "Card (Stripe)"}
+            </p>
+            {awaitingEtransfer && order.payment_due_at && (
+              <p className="mt-1 font-sans text-sm text-amber-700">
+                Due by {formatBakeryDateTime(order.payment_due_at)}
               </p>
-              <p className="break-all font-mono text-xs text-stone-500">
+            )}
+            {order.stripe_payment_intent && (
+              <p className="mt-1 break-all font-mono text-xs text-stone-500">
                 {order.stripe_payment_intent}
               </p>
-            </section>
-          )}
+            )}
+          </section>
         </div>
       </div>
     </div>

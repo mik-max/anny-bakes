@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import CheckoutForm from "@/components/CheckoutForm";
 import ScrollLink from "@/components/ScrollLink";
 import { getStorefrontDrop } from "@/backend/drops";
+import { expireOverdueEtransfers } from "@/backend/orders";
 
 export const metadata: Metadata = {
   title: "Checkout — Anny Bakes Cakes and Treats",
@@ -10,6 +11,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function CheckoutPage() {
+  await expireOverdueEtransfers();
   const drop = await getStorefrontDrop();
   const pickup =
     drop?.status === "open"

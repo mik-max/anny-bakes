@@ -1,19 +1,25 @@
 import "server-only";
 import type Stripe from "stripe";
 import { getStripe } from "@/backend/stripe";
-import { sendOrderPaidEmails } from "@/backend/order-emails";
+import {
+  sendCustomerConfirmation,
+  sendEtransferOrderEmails,
+  sendOrderPaidEmails,
+} from "@/backend/order-emails";
 import { getDropById, releaseUnits, reserveUnits, type UnitRequest } from "@/backend/drops";
 import { getProductsByIds } from "@/backend/products";
 import {
   createPendingOrder,
   expireOrder,
+  expireOverdueEtransfers,
   getOrderById,
+  markEtransferReceived,
   markOrderPaid,
   setStripeSession,
   type NewOrder,
 } from "@/backend/orders";
 import { getDropStatus, remainingUnits } from "@/lib/drops";
-import { CURRENCY } from "@/constants";
+import { CURRENCY, CURRENCY_SYMBOL, ETRANSFER_PAYMENT_HOURS, MIN_ORDER_CENTS } from "@/constants";
 import { STRIPE_SESSION_ID } from "@/lib/checkout";
 import type { Order } from "@/types";
 
@@ -33,17 +39,22 @@ export interface CheckoutInput {
   items: UnitRequest[]; // one entry per product
 }
 
-/** Holds stock, creates a pending order, and returns the Stripe Checkout session. */
-export async function startCheckout(
+/**
+ * Shared by both payment methods: checks the drop, holds the stock and creates a
+ * pending order. Prices and names come from the database, never from the client.
+ */
+async function holdStockAndCreateOrder(
   input: CheckoutInput,
-  origin: string
-): Promise<{ url: string; sessionId: string }> {
+  payment: Pick<NewOrder, "payment_method" | "payment_due_at">
+): Promise<{ order: Order; accessToken: string }> {
+  // Unpaid e-Transfer orders past their deadline give their stock back first.
+  await expireOverdueEtransfers();
+
   const drop = await getDropById(input.drop_id);
   if (!drop || getDropStatus(drop) !== "open") {
     throw new CheckoutError("This drop is no longer taking orders. Please refresh the page.");
   }
 
-  // Prices and names come from the database, never from the client.
   const products = new Map(
     (await getProductsByIds(input.items.map((i) => i.product_id))).map((p) => [p.id, p])
   );
@@ -58,38 +69,57 @@ export async function startCheckout(
     return { product, quantity: item.quantity };
   });
 
+  const subtotal = lines.reduce((sum, l) => sum + l.product.price * l.quantity, 0);
+  if (subtotal < MIN_ORDER_CENTS) {
+    const money = (cents: number) => `${CURRENCY_SYMBOL}${(cents / 100).toFixed(2)}`;
+    throw new CheckoutError(
+      `The minimum order is ${money(MIN_ORDER_CENTS)}. Add ${money(MIN_ORDER_CENTS - subtotal)} more to check out.`
+    );
+  }
+
   if (!(await reserveUnits(drop.id, input.items))) {
     throw new CheckoutError(await soldOutMessage(drop.id, input.items));
   }
-
-  const subtotal = lines.reduce((sum, l) => sum + l.product.price * l.quantity, 0);
-  const newOrder: NewOrder = {
-    customer_name: input.customer_name,
-    email: input.email,
-    phone: input.phone,
-    note: input.note,
-    fulfilment_method: "pickup",
-    delivery_address: null,
-    drop_id: drop.id,
-    pickup_date: drop.pickup_date,
-    pickup_window: drop.pickup_window,
-    items: lines.map(({ product, quantity }) => ({
-      product_id: product.id,
-      product_name: product.name,
-      unit_price: product.price,
-      quantity,
-    })),
-    subtotal,
-    delivery_fee: 0,
-    total: subtotal,
-    currency: CURRENCY,
-  };
-
-  let orderId: string | null = null;
   try {
-    const order = await createPendingOrder(newOrder);
-    orderId = order.id;
+    return await createPendingOrder({
+      customer_name: input.customer_name,
+      email: input.email,
+      phone: input.phone,
+      note: input.note,
+      fulfilment_method: "pickup",
+      delivery_address: null,
+      drop_id: drop.id,
+      pickup_date: drop.pickup_date,
+      pickup_window: drop.pickup_window,
+      items: lines.map(({ product, quantity }) => ({
+        product_id: product.id,
+        product_name: product.name,
+        unit_price: product.price,
+        quantity,
+      })),
+      subtotal,
+      delivery_fee: 0,
+      total: subtotal,
+      currency: CURRENCY,
+      ...payment,
+    });
+  } catch (err) {
+    await releaseUnits(drop.id, input.items); // no order was created, so give the stock back
+    throw err;
+  }
+}
 
+/** Card payment: holds stock, creates a pending order, and returns the Stripe Checkout session. */
+export async function startCheckout(
+  input: CheckoutInput,
+  origin: string
+): Promise<{ url: string; sessionId: string }> {
+  const { order } = await holdStockAndCreateOrder(input, {
+    payment_method: "card",
+    payment_due_at: null,
+  });
+
+  try {
     const session = await getStripe().checkout.sessions.create({
       mode: "payment",
       // Cards (incl. Apple/Google Pay) settle immediately, so "completed" means paid.
@@ -116,10 +146,34 @@ export async function startCheckout(
     return { url: session.url, sessionId: session.id };
   } catch (err) {
     // Don't leave stock held for a checkout that never started.
-    if (orderId) await expireOrder(orderId);
-    else await releaseUnits(drop.id, input.items);
+    await expireOrder(order.id);
     throw err;
   }
+}
+
+/**
+ * Interac e-Transfer: holds stock and creates an order awaiting payment. The
+ * customer gets instructions; an admin marks it paid when the money arrives.
+ * Unpaid orders expire after ETRANSFER_PAYMENT_HOURS.
+ */
+export async function placeEtransferOrder(
+  input: CheckoutInput
+): Promise<{ orderId: string; accessToken: string }> {
+  const dueAt = new Date(Date.now() + ETRANSFER_PAYMENT_HOURS * 3_600_000);
+  const { order, accessToken } = await holdStockAndCreateOrder(input, {
+    payment_method: "etransfer",
+    payment_due_at: dueAt.toISOString(),
+  });
+  await sendEtransferOrderEmails(order, accessToken);
+  return { orderId: order.id, accessToken };
+}
+
+/** An admin confirms the e-Transfer arrived; the customer gets their confirmation. */
+export async function confirmEtransferReceived(orderId: string): Promise<boolean> {
+  if (!(await markEtransferReceived(orderId))) return false;
+  const order = await getOrderById(orderId);
+  if (order) await sendCustomerConfirmation(order);
+  return true;
 }
 
 async function soldOutMessage(dropId: string, items: UnitRequest[]): Promise<string> {

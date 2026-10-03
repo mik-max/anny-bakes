@@ -1,6 +1,9 @@
-import { PRODUCT_CATEGORIES } from "@/constants";
+import { CURRENCY, PRODUCT_CATEGORIES } from "@/constants";
 
 export type FulfilmentMethod = "pickup" | "delivery";
+
+/** Card = Stripe Checkout (incl. Apple/Google Pay); e-Transfer = Interac, confirmed by an admin. */
+export type PaymentMethod = "card" | "etransfer";
 
 export type OrderStatus =
   | "pending" // checkout started, stock held, awaiting payment
@@ -20,11 +23,21 @@ export interface Product {
   description: string;
   ingredients: string; // free text incl. allergens; empty until the client supplies it
   category: ProductCategory;
-  price: number; // cents (USD)
+  price: number; // cents (CAD)
   image_url: string;
   in_stock: boolean;
   featured: boolean; // shown in "Featured Best Sellers" on the home page
   created_at: string;
+}
+
+/** What the browser needs to upload one product photo to Cloudinary. */
+export interface UploadSignature {
+  uploadUrl: string;
+  apiKey: string;
+  timestamp: number;
+  signature: string;
+  folder: string;
+  allowedFormats: string;
 }
 
 /** Fields an admin can set when creating or editing a product. */
@@ -94,8 +107,11 @@ export interface Order {
   subtotal: number; // cents
   delivery_fee: number; // cents
   total: number; // cents
-  currency: "usd";
+  currency: typeof CURRENCY;
   status: OrderStatus;
+  payment_method: PaymentMethod;
+  /** e-Transfer orders only: unpaid orders expire (and release stock) after this. */
+  payment_due_at: string | null;
   stripe_session_id: string | null;
   stripe_payment_intent: string | null;
   created_at: string;

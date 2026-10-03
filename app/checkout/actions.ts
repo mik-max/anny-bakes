@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import {
   CheckoutError,
   abandonCheckout,
+  placeEtransferOrder,
   startCheckout,
   type CheckoutInput,
 } from "@/backend/checkout";
@@ -62,8 +63,12 @@ export async function createCheckoutSession(data: CheckoutFormInput): Promise<Ch
   const parsed = parseCheckout(data);
   if ("error" in parsed) return { error: parsed.error };
 
-  const origin =
-    process.env.NEXT_PUBLIC_BASE_URL ?? (await headers()).get("origin") ?? "http://localhost:3000";
+  // `||`, not `??`: a blank NEXT_PUBLIC_BASE_URL in .env must fall back too.
+  const origin = (
+    process.env.NEXT_PUBLIC_BASE_URL ||
+    (await headers()).get("origin") ||
+    "http://localhost:3000"
+  ).replace(/\/+$/, "");
 
   try {
     return await startCheckout(parsed.input, origin);
@@ -71,6 +76,25 @@ export async function createCheckoutSession(data: CheckoutFormInput): Promise<Ch
     if (err instanceof CheckoutError) return { error: err.message };
     console.error("[checkout] failed to start:", err);
     return { error: "Something went wrong starting checkout. Please try again." };
+  }
+}
+
+/** Interac e-Transfer: places the order and returns the instructions page URL. */
+export async function placeEtransferOrderAction(
+  data: CheckoutFormInput
+): Promise<{ url: string; error?: never } | { error: string }> {
+  const parsed = parseCheckout(data);
+  if ("error" in parsed) return { error: parsed.error };
+
+  try {
+    const { orderId, accessToken } = await placeEtransferOrder(parsed.input);
+    return {
+      url: `/checkout/etransfer?order=${orderId}&token=${encodeURIComponent(accessToken)}`,
+    };
+  } catch (err) {
+    if (err instanceof CheckoutError) return { error: err.message };
+    console.error("[checkout] failed to place e-Transfer order:", err);
+    return { error: "Something went wrong placing your order. Please try again." };
   }
 }
 

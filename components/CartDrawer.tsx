@@ -6,8 +6,8 @@ import { ShoppingBag, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useCartStore, CartItem } from "@/store/cart";
 import { cn } from "@/lib/utils";
-import { CURRENCY_SYMBOL } from "@/constants";
-import { productImage } from "@/lib/images";
+import { CURRENCY_SYMBOL, MIN_ORDER_CENTS } from "@/constants";
+import { productImageProps } from "@/lib/images";
 
 export default function CartDrawer() {
   const pathname = usePathname();
@@ -104,16 +104,32 @@ export default function CartDrawer() {
                 {CURRENCY_SYMBOL}{(subtotal / 100).toFixed(2)}
               </span>
             </div>
-            <p className="font-sans text-xs text-stone-400">
-              Delivery fee calculated at checkout.
-            </p>
-            <Link
-              href="/checkout"
-              onClick={closeCart}
-              className="flex w-full items-center justify-center gap-2 bg-stone-900 py-4 font-sans text-sm font-semibold text-white transition-colors hover:bg-stone-700"
-            >
-              Proceed to Checkout <span aria-hidden>→</span>
-            </Link>
+            {subtotal < MIN_ORDER_CENTS ? (
+              <>
+                <p className="font-sans text-xs text-amber-700">
+                  Minimum order {CURRENCY_SYMBOL}{(MIN_ORDER_CENTS / 100).toFixed(2)} — add{" "}
+                  {CURRENCY_SYMBOL}{((MIN_ORDER_CENTS - subtotal) / 100).toFixed(2)} more to check out.
+                </p>
+                <button
+                  type="button"
+                  disabled
+                  className="flex w-full items-center justify-center gap-2 bg-stone-300 py-4 font-sans text-sm font-semibold text-white"
+                >
+                  Proceed to Checkout <span aria-hidden>→</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="font-sans text-xs text-stone-400">Prices in CAD. Pickup only for now.</p>
+                <Link
+                  href="/checkout"
+                  onClick={closeCart}
+                  className="flex w-full items-center justify-center gap-2 bg-stone-900 py-4 font-sans text-sm font-semibold text-white transition-colors hover:bg-stone-700"
+                >
+                  Proceed to Checkout <span aria-hidden>→</span>
+                </Link>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -135,7 +151,7 @@ function CartLineItem({
       {/* Thumbnail */}
       <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl bg-[#F5EFE6]">
         <Image
-          src={productImage(item.product)}
+          {...productImageProps(item.product, { width: 128, height: 128 })}
           alt={item.product.name}
           fill
           className="object-cover"
