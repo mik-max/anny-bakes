@@ -34,13 +34,7 @@ Answers from the pre-launch questionnaire (received 27 Sep 2026). Target launch:
 
 ## Pending from client
 
-- Web address (domain)
-- Customer contact email
-- Email address for new-order alerts
-- Pickup address
-- Cancellation / refund policy
-- Policy for uncollected orders
-- Privacy policy and disclaimer wording (in progress)
+See [LAUNCH_CHECKLIST.md](LAUNCH_CHECKLIST.md) for everything still needed before launch.
 
 ## Needs clarification
 

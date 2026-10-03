@@ -17,11 +17,11 @@ export default function HeroSection() {
     const section = sectionRef.current;
     if (!section) return;
 
-    const nav         = section.querySelector<HTMLElement>(".hero-nav");
-    const eyebrow     = section.querySelector<HTMLElement>(".hero-eyebrow");
-    const headline    = section.querySelector<HTMLElement>(".hero-headline");
+    const nav = section.querySelector<HTMLElement>(".hero-nav");
+    const eyebrow = section.querySelector<HTMLElement>(".hero-eyebrow");
+    const headline = section.querySelector<HTMLElement>(".hero-headline");
     const description = section.querySelector<HTMLElement>(".hero-description");
-    const cta         = section.querySelector<HTMLElement>(".hero-cta");
+    const cta = section.querySelector<HTMLElement>(".hero-cta");
 
     if (!nav || !eyebrow || !headline || !description || !cta) return;
 
@@ -31,11 +31,11 @@ export default function HeroSection() {
 
       const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
 
-      tl.from(nav,         { opacity: 0, y: -18, duration: 0.7 })
-        .from(eyebrow,     { opacity: 0, duration: 0.5 },           "-=0.3")
+      tl.from(nav, { opacity: 0, y: -18, duration: 0.7 })
+        .from(eyebrow, { opacity: 0, duration: 0.5 }, "-=0.3")
         .from(split.lines, { yPercent: 110, duration: 0.9, stagger: 0.14 }, "-=0.15")
-        .from(description, { opacity: 0, y: 18, duration: 0.65 },  "+=0.05")
-        .from(cta,         { opacity: 0, y: 12, duration: 0.55 },  "-=0.35");
+        .from(description, { opacity: 0, y: 18, duration: 0.65 }, "+=0.05")
+        .from(cta, { opacity: 0, y: 12, duration: 0.55 }, "-=0.35");
     }, section);
 
     return () => ctx.revert();
@@ -116,7 +116,7 @@ export default function HeroSection() {
           <div className="flex flex-col items-start gap-5 md:max-w-[320px] md:items-end">
             <p className="hero-description font-sans text-sm leading-relaxed text-white/75 md:text-right">
               Cookies, muffins, cakes, breads and pastries — never frozen.
-              Annything, baked fresh.
+              {" "}<em>Anny</em>thing, baked fresh.
             </p>
             <div className="hero-cta">
               <ScrollLink
