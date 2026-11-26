@@ -7,6 +7,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import type { Product } from "@/types";
 import ProductCard from "@/components/ProductCard";
 import TextReveal from "@/components/TextReveal";
+import NudgeArrow from "@/components/NudgeArrow";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -94,9 +95,9 @@ export default function BestSellersSection({ products, inDropIds }: BestSellersS
         <div className="mt-16 text-center">
           <Link
             href="/menu"
-            className="bs-fade inline-flex items-center gap-2 font-sans font-semibold text-stone-900 transition-colors hover:text-stone-500"
+            className="bs-fade group inline-flex items-center gap-2 font-sans font-semibold text-stone-900 transition-colors hover:text-stone-500"
           >
-            View Full Menu <span aria-hidden>→</span>
+            View Full Menu <NudgeArrow />
           </Link>
         </div>
 

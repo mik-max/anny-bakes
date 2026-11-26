@@ -142,3 +142,15 @@
     cursor: not-allowed;
   }
 }
+/* Countdown odometer: the old digit rolls down and out as the new one rolls in from above. */
+@keyframes digit-in {
+  from {
+    transform: translateY(-100%);
+  }
+}
+
+@keyframes digit-out {
+  to {
+    transform: translateY(100%);
+  }
+}
