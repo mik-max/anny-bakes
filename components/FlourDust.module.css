@@ -1,0 +1,49 @@
+.layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  animation: appear 2s ease-out 0.8s both;
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+  }
+}
+
+.speck {
+  position: absolute;
+  top: -4%;
+  width: var(--s);
+  height: var(--s);
+  border-radius: 50%;
+  background: rgb(255 255 255 / var(--o));
+  box-shadow: 0 0 6px rgb(255 255 255 / calc(var(--o) * 0.6));
+  animation-name: drift;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.paused .speck {
+  animation-play-state: paused;
+}
+
+/* Falls the full height of the hero with a lazy sideways sway, like flour after a dusting. */
+@keyframes drift {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(var(--sway), 55vh, 0);
+  }
+  100% {
+    transform: translate3d(0, 112vh, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .layer {
+    display: none;
+  }
+}

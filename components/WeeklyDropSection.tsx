@@ -10,6 +10,7 @@ import ProductCard from "@/components/ProductCard";
 import AddToCartButton from "@/components/AddToCartButton";
 import Countdown from "@/components/Countdown";
 import TextReveal from "@/components/TextReveal";
+import NudgeArrow from "@/components/NudgeArrow";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -121,9 +122,9 @@ export default function WeeklyDropSection({ drop }: { drop: StorefrontDrop | nul
               <div className="mt-14 text-center">
                 <button
                   onClick={openCart}
-                  className="wd-fade inline-flex items-center gap-2 bg-stone-900 px-7 py-3.5 font-sans text-sm font-semibold text-white transition-colors hover:bg-stone-700"
+                  className="wd-fade group inline-flex items-center gap-2 bg-stone-900 px-7 py-3.5 font-sans text-sm font-semibold text-white transition-colors hover:bg-stone-700"
                 >
-                  Order Weekly Drop <span aria-hidden>→</span>
+                  Order Weekly Drop <NudgeArrow />
                 </button>
               </div>
             )}

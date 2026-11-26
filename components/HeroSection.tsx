@@ -3,12 +3,15 @@
 import { useRef, useEffect } from "react";
 import { gsap } from "gsap";
 import { SplitText } from "gsap/SplitText";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { IMAGES } from "@/constants/images";
 import { getImageProps } from "next/image";
 import ScrollLink from "@/components/ScrollLink";
 import SiteMenu from "@/components/SiteMenu";
+import FlourDust from "@/components/FlourDust";
+import NudgeArrow from "@/components/NudgeArrow";
 
-gsap.registerPlugin(SplitText);
+gsap.registerPlugin(SplitText, ScrollTrigger);
 
 export default function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -38,7 +41,37 @@ export default function HeroSection() {
         .from(cta, { opacity: 0, y: 12, duration: 0.55 }, "-=0.35");
     }, section);
 
-    return () => ctx.revert();
+    // Ambient life, skipped entirely for visitors who prefer reduced motion.
+    // At rest (top of the page, first paint) the hero looks exactly as designed.
+    const mm = gsap.matchMedia(section);
+    mm.add("(prefers-reduced-motion: no-preference)", () => {
+      // The photo breathes: a slow zoom in and back out, paused while scrolled away.
+      const breathe = gsap.to(".hero-photo", {
+        scale: 1.06,
+        duration: 22,
+        ease: "sine.inOut",
+        yoyo: true,
+        repeat: -1,
+      });
+      ScrollTrigger.create({
+        trigger: section,
+        start: "top bottom",
+        end: "bottom top",
+        onToggle: (self) => breathe.paused(!self.isActive),
+      });
+
+      // Scrolling away: the photo drifts slower than the page.
+      gsap.to(".hero-parallax", {
+        yPercent: 18,
+        ease: "none",
+        scrollTrigger: { trigger: section, start: "top top", end: "bottom top", scrub: true },
+      });
+    });
+
+    return () => {
+      ctx.revert();
+      mm.revert();
+    };
   }, []);
 
   // Art direction: the landscape photo on landscape screens, a portrait crop on phones.
@@ -55,17 +88,21 @@ export default function HeroSection() {
       ref={sectionRef}
       className="relative h-screen w-full overflow-hidden bg-stone-900"
     >
-      <picture>
-        <source media="(orientation: landscape)" srcSet={landscapeSrcSet} />
-        <img
-          {...imgProps}
-          srcSet={portraitSrcSet}
-          alt={common.alt}
-          loading="eager"
-          fetchPriority="high"
-          className="absolute inset-0 h-full w-full object-cover object-center"
-        />
-      </picture>
+      {/* Photo + drifting flour move together for the scroll parallax */}
+      <div className="hero-parallax absolute inset-0 will-change-transform">
+        <picture>
+          <source media="(orientation: landscape)" srcSet={landscapeSrcSet} />
+          <img
+            {...imgProps}
+            srcSet={portraitSrcSet}
+            alt={common.alt}
+            loading="eager"
+            fetchPriority="high"
+            className="hero-photo absolute inset-0 h-full w-full object-cover object-center will-change-transform"
+          />
+        </picture>
+        <FlourDust />
+      </div>
       {/* Soft scrims only where text sits, so the photo shows at full brightness */}
       <div className="absolute inset-x-0 top-0 h-40 bg-linear-to-b from-black/60 to-transparent" />
       {/* Phones get a stronger scrim: the headline covers more of the photo there */}
@@ -86,9 +123,9 @@ export default function HeroSection() {
           {/* Right: Order Now — hidden on mobile, replaced by the hero CTA below */}
           <ScrollLink
             targetId="weekly-drop"
-            className="hidden items-center gap-1.5 text-sm text-white/90 transition-colors hover:text-white sm:flex"
+            className="group hidden items-center gap-1.5 text-sm text-white/90 transition-colors hover:text-white sm:flex"
           >
-            Order Now <span aria-hidden>→</span>
+            Order Now <NudgeArrow />
           </ScrollLink>
 
           {/* Invisible spacer keeps brand centred on mobile */}
@@ -121,9 +158,9 @@ export default function HeroSection() {
             <div className="hero-cta">
               <ScrollLink
                 targetId="weekly-drop"
-                className="inline-flex items-center gap-2 bg-[#F5EFE6] px-6 py-3 font-sans text-sm font-medium text-stone-900 transition-colors hover:bg-white"
+                className="group inline-flex items-center gap-2 bg-[#F5EFE6] px-6 py-3 font-sans text-sm font-medium text-stone-900 transition-colors hover:bg-white"
               >
-                View Weekly Menu <span aria-hidden>→</span>
+                View Weekly Menu <NudgeArrow />
               </ScrollLink>
             </div>
           </div>

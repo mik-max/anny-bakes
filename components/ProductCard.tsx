@@ -16,14 +16,14 @@ export default function ProductCard({ product, badge, action }: ProductCardProps
   const image = productImageProps(product, { width: 800, height: 600 });
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-md transition-shadow hover:shadow-lg">
-      {/* Product image */}
-      <div className="relative h-56 w-full">
+    <div className="group flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-md transition-[box-shadow,translate] duration-300 ease-out hover:shadow-lg motion-safe:hover:-translate-y-1">
+      {/* Product image: zooms gently on hover, clipped to its frame */}
+      <div className="relative h-56 w-full overflow-hidden">
         <Image
           {...image}
           alt={product.name}
           fill
-          className="object-cover"
+          className="object-cover transition-transform duration-700 ease-out motion-safe:group-hover:scale-105"
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           // Bundled category photos come with a tiny blurred preview; uploaded ones don't.
           placeholder={typeof image.src === "string" ? "empty" : "blur"}
